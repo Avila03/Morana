@@ -33,3 +33,5 @@
 - O GitHub é a fonte de código. Atualizações de produção exigem o fluxo de publicação da hospedagem; não prometa deploy automático sem integração configurada e verificada.
 - Nunca versione senhas, tokens, chaves privadas ou arquivos `.env`.
 - Produto de destino confirmado: Hospedagem Compartilhada I - Linux, com E-mail GO 5 e SSL DV Domínio Único. O pacote de upload contém somente os arquivos de `dist/`.
+- O workflow `.github/workflows/deploy-locaweb.yml` conecta a `main` à pasta `public_html/site/` por FTPS, após o cadastro dos Secrets `LOCAWEB_FTP_HOST`, `LOCAWEB_FTP_USER` e `LOCAWEB_FTP_PASSWORD`. Há execução manual pelo Actions e automática para os caminhos definidos no workflow. Não altere o destino para a raiz do domínio sem tratar o backup do site anterior.
+- Preserve a validação do certificado e a ausência de limpeza integral da pasta remota. Credenciais são preenchidas pelo usuário diretamente nos Secrets. Não afirme que a conexão ou o deploy foram validados antes de uma execução com credenciais; a checagem pública apenas por GET não envia e-mails.

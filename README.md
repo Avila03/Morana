@@ -42,6 +42,8 @@ dist/
 AGENTS.md          Orientações para continuar o desenvolvimento
 docs/LOCAWEB.md    Instruções de publicação e teste de recebimento
 scripts/package_locaweb.py  Gera o ZIP de upload
+scripts/check_locaweb_deploy.py  Confere o site publicado por HTTPS
+.github/workflows/deploy-locaweb.yml  Publicação na Locaweb pelo Actions
 tests/            Testes sem envio real de e-mail
 .openai/hosting.json  Identidade da demo já publicada no Sites
 ```
@@ -60,7 +62,13 @@ Fotografia arquitetônica ilustrativa de Sean Pollock / Unsplash, identificador 
 
 ## Publicação
 
-O diretório a publicar é `dist/`. Não é necessário instalar pacotes nem executar build. Na Locaweb, envie o **conteúdo** dessa pasta para `public_html`.
+O diretório a publicar é `dist/`. Não é necessário instalar pacotes nem executar build. O workflow **Publicar na Locaweb** envia seu conteúdo para `public_html/site/`, em [moranaservicos.com.br/site/](https://moranaservicos.com.br/site/).
+
+Configure os Secrets `LOCAWEB_FTP_HOST`, `LOCAWEB_FTP_USER` e `LOCAWEB_FTP_PASSWORD` em **Settings → Secrets and variables → Actions**. Depois, use **Actions → Publicar na Locaweb → Run workflow**, selecionando `main`. Alterações do site na `main` também iniciam a publicação automática após essa configuração. Sem credenciais, nenhum arquivo é enviado. A conexão usa FTPS na porta 21 com validação de certificado; o primeiro deploy com credenciais ainda precisa confirmar a conexão à conta.
+
+O workflow executa verificações antes do envio e confere os arquivos públicos por HTTPS depois dele. A disponibilidade do envio PHP é informada separadamente; publicar arquivos não habilita `mail()` no servidor. Consulte [as instruções completas](docs/LOCAWEB.md#conectar-github-e-locaweb).
+
+Para publicar manualmente, envie o **conteúdo** de `dist/` para a pasta escolhida na hospedagem. Guarde um backup do site anterior antes de substituir a página principal do domínio.
 
 Para gerar o pacote de upload:
 

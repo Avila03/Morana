@@ -14,6 +14,8 @@ O arquivo `artifacts/morana-locaweb.zip` contém `index.html`, `styles.css`, `ap
 
 ## Enviar os arquivos
 
+O projeto também possui publicação pelo GitHub Actions. Para o fluxo automático ou por botão, use a configuração abaixo. O envio manual por FileZilla continua descrito nesta seção.
+
 1. Faça backup dos arquivos e do banco do site que já estiver no domínio, antes de substituí-lo.
 2. Acesse a hospedagem pelo painel da Locaweb e entre em **Arquivos e FTP**.
 3. Conecte o WebFTP ou FileZilla usando os dados apresentados no painel.
@@ -22,6 +24,40 @@ O arquivo `artifacts/morana-locaweb.zip` contém `index.html`, `styles.css`, `ap
 6. Confira se o domínio correto aponta para a hospedagem e se o certificado SSL contratado está instalado e válido para esse domínio. O produto ativo, por si só, não comprova essa instalação.
 
 Para testar sem trocar a página inicial, envie os arquivos para `public_html/demo/` e abra o domínio seguido de `/demo/`.
+
+## Conectar GitHub e Locaweb
+
+O workflow [Publicar na Locaweb](../.github/workflows/deploy-locaweb.yml) publica o conteúdo de `dist/` em `public_html/site/`, correspondente a [moranaservicos.com.br/site/](https://moranaservicos.com.br/site/). O destino mantém a pasta atual do novo site. A página principal do domínio é uma publicação separada; não altere o destino para a raiz antes de guardar um backup do site anterior.
+
+### Configuração única dos Secrets
+
+1. No repositório `Avila03/Morana`, abra **Settings → Secrets and variables → Actions → New repository secret**.
+2. Cadastre os três Secrets abaixo, um de cada vez. A senha deve ser preenchida diretamente no GitHub, nunca em arquivos do repositório ou na conversa.
+
+| Nome do Secret | Valor |
+| --- | --- |
+| `LOCAWEB_FTP_HOST` | Host FTP da hospedagem, por exemplo `ftp.moranaservicos2.hospedagemdesites.ws`, sem `ftp://` nem caminhos |
+| `LOCAWEB_FTP_USER` | Usuário FTP, atualmente `moranaservicos2` |
+| `LOCAWEB_FTP_PASSWORD` | Senha FTP atual, a mesma usada no FileZilla |
+
+### Publicar
+
+1. Abra **Actions → Publicar na Locaweb → Run workflow**.
+2. Selecione a branch **main** e clique em **Run workflow**.
+3. Abra a execução para acompanhar. O workflow verifica a sintaxe, executa os testes locais sem envio real de e-mail e publica somente após essas verificações.
+4. Ao terminar, consulte o resumo da execução e abra o site em `/site/`. Os arquivos estáticos são comparados com os do commit; o endpoint PHP também é consultado, sem enviar e-mails.
+
+Depois da configuração inicial, commits na `main` que alterem `dist/` ou os arquivos de publicação/teste listados no workflow também iniciam o deploy. Alterações apenas na documentação não publicam o site. Um commit em outra branch não publica na Locaweb. Adicionar um Secret não inicia uma execução: o primeiro envio deve ser iniciado pelo botão.
+
+Sem os Secrets, uma execução automática registra que a configuração está pendente e não envia arquivos. Uma execução manual sem credenciais termina com uma orientação para cadastrá-las. Não há conexão FTP validada enquanto o primeiro envio com credenciais não terminar com sucesso.
+
+A conexão está configurada para **FTPS explícito na porta 21**, com validação do certificado. Se houver erro de TLS/certificado, confirme com a Locaweb o hostname FTPS correto para essa conta; mantenha a validação do certificado habilitada.
+
+O deploy não usa limpeza integral da pasta remota. A sincronização acompanha os arquivos do projeto em `.morana-deploy-sync-state.json`; pode atualizar ou remover arquivos de publicações anteriores que sejam controlados por esse estado. Arquivos alheios ao estado não são apagados automaticamente. O workflow não altera as regras do WordPress na raiz do domínio.
+
+O envio de e-mail é independente da integração com o GitHub. Na verificação de 27/10/2026, `/site/contato.php` respondeu `available: false`: a função `mail()` estava indisponível. Um deploy bem-sucedido não habilita essa função; o resumo da execução sinaliza essa pendência, e o formulário permanece no modo de preparar e-mail até a configuração do servidor permitir o envio direto.
+
+Referências: [Integração com GitHub Actions documentada pela Locaweb](https://www.locaweb.com.br/ajuda/wiki/github-actions-ftp-hospedagem-compartilhada-locaweb/) e [Secrets no GitHub Actions](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets).
 
 ## Funcionamento do contato
 

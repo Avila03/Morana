@@ -1,0 +1,93 @@
+name: Publicar na Locaweb
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'dist/**'
+      - '.github/workflows/deploy-locaweb.yml'
+      - 'scripts/check_locaweb_deploy.py'
+      - 'scripts/package_locaweb.py'
+      - 'tests/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: locaweb-morana-site
+  cancel-in-progress: false
+
+jobs:
+  verificar:
+    name: Verificar arquivos
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Obter o projeto
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Verificar JavaScript, PHP e pacote de publicação
+        run: |
+          node --check dist/app.js
+          php -n -l dist/contato.php
+          php -n -l dist/contact-handler.php
+          php -n tests/contact-handler-test.php
+          python3 tests/contact-endpoint-test.py
+          python3 -m py_compile scripts/check_locaweb_deploy.py
+          python3 scripts/package_locaweb.py
+
+  publicar:
+    name: Publicar em /site/
+    needs: verificar
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Obter o projeto
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Conferir a configuração
+        id: config
+        env:
+          LOCAWEB_FTP_HOST: ${{ secrets.LOCAWEB_FTP_HOST }}
+          LOCAWEB_FTP_USER: ${{ secrets.LOCAWEB_FTP_USER }}
+          LOCAWEB_FTP_PASSWORD: ${{ secrets.LOCAWEB_FTP_PASSWORD }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          names = ('LOCAWEB_FTP_HOST', 'LOCAWEB_FTP_USER', 'LOCAWEB_FTP_PASSWORD')
+          missing = [name for name in names if not os.environ.get(name, '').strip()]
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('ready=' + ('false' if missing else 'true') + '\n')
+          if missing:
+              message = 'Publicação aguardando os Secrets do GitHub: ' + ', '.join(missing)
+              print('::notice::' + message)
+              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+                  summary.write(message + '\n\nNenhum arquivo foi enviado à Locaweb.\n')
+              if os.environ['GITHUB_EVENT_NAME'] == 'workflow_dispatch':
+                  raise SystemExit('Cadastre os Secrets e execute o workflow novamente.')
+          PY
+      - name: Enviar os arquivos para a Locaweb
+        if: steps.config.outputs.ready == 'true'
+        uses: SamKirkland/FTP-Deploy-Action@110f9186c050f71550953127052e77650219c287 # v4.4.0
+        with:
+          server: ${{ secrets.LOCAWEB_FTP_HOST }}
+          username: ${{ secrets.LOCAWEB_FTP_USER }}
+          password: ${{ secrets.LOCAWEB_FTP_PASSWORD }}
+          protocol: ftps
+          security: strict
+          port: 21
+          local-dir: ./dist/
+          server-dir: ./public_html/site/
+          state-name: .morana-deploy-sync-state.json
+          dangerous-clean-slate: false
+          log-level: minimal
+          timeout: 60000
+      - name: Conferir o site publicado
+        if: steps.config.outputs.ready == 'true'
+        run: python3 scripts/check_locaweb_deploy.py --revision "$GITHUB_SHA"
