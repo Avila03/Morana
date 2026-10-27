@@ -16,12 +16,11 @@ O arquivo `artifacts/morana-locaweb.zip` contém `index.html`, `styles.css`, `ap
 
 O projeto também possui publicação pelo GitHub Actions. Para o fluxo automático ou por botão, use a configuração abaixo. O envio manual por FileZilla continua descrito nesta seção.
 
-1. Faça backup dos arquivos e do banco do site que já estiver no domínio, antes de substituí-lo.
-2. Acesse a hospedagem pelo painel da Locaweb e entre em **Arquivos e FTP**.
-3. Conecte o WebFTP ou FileZilla usando os dados apresentados no painel.
-4. Extraia o ZIP no computador e envie seu conteúdo para `public_html`. Não envie uma pasta `dist` envolvendo os arquivos se quiser abrir o site diretamente na raiz do domínio.
-5. O pacote inclui `.htaccess` com `DirectoryIndex index.html index.php` para abrir o site institucional na página inicial. Antes de substituí-lo manualmente, baixe uma cópia do `.htaccess` anterior e dos arquivos que receberão novas versões. O deploy pelo Actions faz esse backup antes do envio.
-6. Confira se o domínio correto aponta para a hospedagem e se o certificado SSL contratado está instalado e válido para esse domínio. O produto ativo, por si só, não comprova essa instalação.
+1. Acesse a hospedagem pelo painel da Locaweb e entre em **Arquivos e FTP**.
+2. Conecte o WebFTP ou FileZilla usando os dados apresentados no painel.
+3. Extraia o ZIP no computador e envie seu conteúdo para `public_html`. Não envie uma pasta `dist` envolvendo os arquivos se quiser abrir o site diretamente na raiz do domínio.
+4. O pacote inclui `.htaccess` com `DirectoryIndex index.html index.php` para abrir o site institucional na página inicial.
+5. Confira se o domínio correto aponta para a hospedagem e se o certificado SSL contratado está instalado e válido para esse domínio. O produto ativo, por si só, não comprova essa instalação.
 
 Para testar sem trocar a página inicial, envie os arquivos para `public_html/demo/` e abra o domínio seguido de `/demo/`.
 
@@ -44,7 +43,7 @@ O workflow [Publicar na Locaweb](../.github/workflows/deploy-locaweb.yml) public
 
 1. Abra **Actions → Publicar na Locaweb → Run workflow**.
 2. Selecione a branch **main** e clique em **Run workflow**.
-3. Abra a execução para acompanhar. O workflow verifica a sintaxe, executa os testes locais sem envio real de e-mail e guarda o backup descrito abaixo antes de publicar.
+3. Abra a execução para acompanhar. O workflow verifica a sintaxe, executa os testes locais sem envio real de e-mail e publica diretamente, sem etapa de backup.
 4. Ao terminar, consulte o resumo da execução e abra [moranaservicos.com.br](https://moranaservicos.com.br/). Os arquivos estáticos e a página inicial são comparados com os do commit; o endpoint PHP também é consultado, sem enviar e-mails.
 
 Depois da configuração inicial, commits na `main` que alterem `dist/` ou os arquivos de publicação/teste listados no workflow também iniciam o deploy. Alterações apenas na documentação não publicam o site. Um commit em outra branch não publica na Locaweb. Adicionar um Secret não inicia uma execução: o primeiro envio deve ser iniciado pelo botão.
@@ -54,14 +53,6 @@ Sem os Secrets, uma execução automática registra que a configuração está p
 A conexão está configurada para **FTPS explícito na porta 21**, com validação do certificado. Se houver erro de TLS/certificado, confirme com a Locaweb o hostname FTPS correto para essa conta; mantenha a validação do certificado habilitada.
 
 O deploy não usa limpeza integral da pasta remota. A sincronização acompanha os arquivos do projeto em `.morana-deploy-sync-state.json`; pode atualizar ou remover arquivos de publicações anteriores que sejam controlados por esse estado. Arquivos alheios ao estado não são apagados automaticamente. O novo `.htaccess` substitui as regras antigas da página principal por uma configuração que prioriza o `index.html` da Morana.
-
-### Backup e recuperação da página anterior
-
-Antes de cada publicação, o script `scripts/backup_locaweb.py` lê os arquivos existentes que receberão novas versões e os guarda em um ZIP na pasta `_morana_backups/`, ao lado de `public_html`, fora da área pública. Inclui o `.htaccess` anterior e o `index.php`, quando existirem. O script não faz alterações na pasta pública. A sincronização só começa se o ZIP for enviado ao FTP, protegido por permissões privadas e conferido pelo tamanho.
-
-Esse backup cobre os arquivos substituídos pelo deploy; não é uma cópia completa do WordPress nem do banco de dados. Os demais arquivos do WordPress e o banco não são modificados pelo workflow. O arquivo `manifest.json` dentro do ZIP lista os originais guardados e os caminhos que antes não existiam.
-
-O resumo da execução informa o caminho do ZIP. Para recuperar o estado anterior, baixe-o pelo FileZilla, extraia `files/` e restaure esses arquivos na mesma estrutura de `public_html/`. Os arquivos criados pela publicação e listados como anteriormente ausentes no manifesto devem ser tratados na recuperação; não exclua pastas ou arquivos alheios a essa publicação. Restaurar o estado anterior pode trazer de volta o erro do WordPress que já existia antes da troca.
 
 O envio de e-mail é independente da integração com o GitHub. Na verificação de 27/10/2026, `/site/contato.php` respondeu `available: false`: a função `mail()` estava indisponível. Um deploy bem-sucedido não habilita essa função; o resumo da execução sinaliza essa pendência, e o formulário permanece no modo de preparar e-mail até a configuração do servidor permitir o envio direto.
 

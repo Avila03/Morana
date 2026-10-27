@@ -8,7 +8,6 @@ on:
       - 'dist/**'
       - '.github/workflows/deploy-locaweb.yml'
       - 'scripts/check_locaweb_deploy.py'
-      - 'scripts/backup_locaweb.py'
       - 'scripts/package_locaweb.py'
       - 'tests/**'
 
@@ -36,7 +35,6 @@ jobs:
           php -n -l dist/contact-handler.php
           php -n tests/contact-handler-test.php
           python3 tests/contact-endpoint-test.py
-          python3 -m unittest discover -s tests -p 'test_backup_locaweb.py'
           python3 -m py_compile scripts/check_locaweb_deploy.py
           python3 scripts/package_locaweb.py
 
@@ -74,16 +72,8 @@ jobs:
               if os.environ['GITHUB_EVENT_NAME'] == 'workflow_dispatch':
                   raise SystemExit('Cadastre os Secrets e execute o workflow novamente.')
           PY
-      - name: Guardar backup antes de substituir a página principal
-        id: backup
-        if: steps.config.outputs.ready == 'true'
-        env:
-          LOCAWEB_FTP_HOST: ${{ secrets.LOCAWEB_FTP_HOST }}
-          LOCAWEB_FTP_USER: ${{ secrets.LOCAWEB_FTP_USER }}
-          LOCAWEB_FTP_PASSWORD: ${{ secrets.LOCAWEB_FTP_PASSWORD }}
-        run: python3 scripts/backup_locaweb.py --revision "$GITHUB_SHA"
       - name: Enviar os arquivos para a Locaweb
-        if: success() && steps.config.outputs.ready == 'true' && steps.backup.outcome == 'success'
+        if: success() && steps.config.outputs.ready == 'true'
         uses: SamKirkland/FTP-Deploy-Action@110f9186c050f71550953127052e77650219c287 # v4.4.0
         with:
           server: ${{ secrets.LOCAWEB_FTP_HOST }}

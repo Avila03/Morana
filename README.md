@@ -43,7 +43,6 @@ AGENTS.md          Orientações para continuar o desenvolvimento
 docs/LOCAWEB.md    Instruções de publicação e teste de recebimento
 scripts/package_locaweb.py  Gera o ZIP de upload
 scripts/check_locaweb_deploy.py  Confere o site publicado por HTTPS
-scripts/backup_locaweb.py  Guarda os arquivos anteriores antes de publicar na raiz
 .github/workflows/deploy-locaweb.yml  Publicação na Locaweb pelo Actions
 tests/            Testes sem envio real de e-mail
 .openai/hosting.json  Identidade da demo já publicada no Sites
@@ -67,9 +66,9 @@ O diretório a publicar é `dist/`. Não é necessário instalar pacotes nem exe
 
 Configure os Secrets `LOCAWEB_FTP_HOST`, `LOCAWEB_FTP_USER` e `LOCAWEB_FTP_PASSWORD` em **Settings → Secrets and variables → Actions**. Depois, use **Actions → Publicar na Locaweb → Run workflow**, selecionando `main`. Alterações do site na `main` também iniciam a publicação automática após essa configuração. Sem credenciais, nenhum arquivo é enviado. A conexão usa FTPS na porta 21 com validação de certificado; o primeiro deploy com credenciais ainda precisa confirmar a conexão à conta.
 
-O workflow executa verificações, guarda um backup privado dos arquivos que serão substituídos e só então publica na raiz. O pacote inclui `.htaccess` para priorizar `index.html`. Depois do envio, confere os arquivos públicos e a página inicial por HTTPS. A disponibilidade do envio PHP é informada separadamente; publicar arquivos não habilita `mail()` no servidor. Consulte [as instruções completas](docs/LOCAWEB.md#conectar-github-e-locaweb).
+O workflow executa verificações e publica diretamente na raiz, sem etapa de backup. O pacote inclui `.htaccess` para priorizar `index.html`. Depois do envio, confere os arquivos públicos e a página inicial por HTTPS. A disponibilidade do envio PHP é informada separadamente; publicar arquivos não habilita `mail()` no servidor. Consulte [as instruções completas](docs/LOCAWEB.md#conectar-github-e-locaweb).
 
-Para publicar manualmente, envie o **conteúdo** de `dist/` para a pasta escolhida na hospedagem. Guarde um backup do site anterior antes de substituir a página principal do domínio.
+Para publicar manualmente, envie o **conteúdo** de `dist/` para a pasta escolhida na hospedagem.
 
 Para gerar o pacote de upload:
 
