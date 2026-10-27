@@ -64,7 +64,7 @@ Fotografia arquitetônica ilustrativa de Sean Pollock / Unsplash, identificador 
 
 O diretório a publicar é `dist/`. Não é necessário instalar pacotes nem executar build. O workflow **Publicar na Locaweb** envia seu conteúdo diretamente para `public_html/`, para abrir em [moranaservicos.com.br](https://moranaservicos.com.br/) sem subpasta.
 
-Configure os Secrets `LOCAWEB_FTP_HOST`, `LOCAWEB_FTP_USER` e `LOCAWEB_FTP_PASSWORD` em **Settings → Secrets and variables → Actions**. Depois, use **Actions → Publicar na Locaweb → Run workflow**, selecionando `main`. Alterações do site na `main` também iniciam a publicação automática após essa configuração. Sem credenciais, nenhum arquivo é enviado. A conexão usa FTPS na porta 21 com validação de certificado; o primeiro deploy com credenciais ainda precisa confirmar a conexão à conta.
+Configure os Secrets `LOCAWEB_FTP_HOST`, `LOCAWEB_FTP_USER` e `LOCAWEB_FTP_PASSWORD` em **Settings → Secrets and variables → Actions**. Depois, use **Actions → Publicar na Locaweb → Run workflow**, selecionando `main`. Alterações do site na `main` também iniciam a publicação automática após essa configuração. Sem credenciais, nenhum arquivo é enviado. A conexão usa FTP na porta 21, autorizado para o servidor desta conta; a checagem do site publicado usa HTTPS.
 
 O workflow executa verificações e publica diretamente na raiz, sem etapa de backup. O pacote inclui `.htaccess` para priorizar `index.html`. Depois do envio, confere os arquivos públicos e a página inicial por HTTPS. A disponibilidade do envio PHP é informada separadamente; publicar arquivos não habilita `mail()` no servidor. Consulte [as instruções completas](docs/LOCAWEB.md#conectar-github-e-locaweb).
 

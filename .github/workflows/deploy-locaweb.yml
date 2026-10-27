@@ -79,8 +79,7 @@ jobs:
           server: ${{ secrets.LOCAWEB_FTP_HOST }}
           username: ${{ secrets.LOCAWEB_FTP_USER }}
           password: ${{ secrets.LOCAWEB_FTP_PASSWORD }}
-          protocol: ftps
-          security: strict
+          protocol: ftp
           port: 21
           local-dir: ./dist/
           server-dir: ./public_html/

@@ -50,7 +50,7 @@ Depois da configuração inicial, commits na `main` que alterem `dist/` ou os ar
 
 Sem os Secrets, uma execução automática registra que a configuração está pendente e não envia arquivos. Uma execução manual sem credenciais termina com uma orientação para cadastrá-las. Não há conexão FTP validada enquanto o primeiro envio com credenciais não terminar com sucesso.
 
-A conexão está configurada para **FTPS explícito na porta 21**, com validação do certificado. Se houver erro de TLS/certificado, confirme com a Locaweb o hostname FTPS correto para essa conta; mantenha a validação do certificado habilitada.
+A conexão está configurada para **FTP na porta 21**, conforme o acesso dessa hospedagem. O servidor recusou FTPS com `500 Command "AUTH" not understood`. O responsável autorizou explicitamente a conexão FTP sem criptografia para a publicação desta conta. Os Secrets protegem o armazenamento das credenciais no GitHub. A checagem pública do site continua usando HTTPS com validação do certificado.
 
 O deploy não usa limpeza integral da pasta remota. A sincronização acompanha os arquivos do projeto em `.morana-deploy-sync-state.json`; pode atualizar ou remover arquivos de publicações anteriores que sejam controlados por esse estado. Arquivos alheios ao estado não são apagados automaticamente. O novo `.htaccess` substitui as regras antigas da página principal por uma configuração que prioriza o `index.html` da Morana.
 
