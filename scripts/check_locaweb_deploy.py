@@ -30,7 +30,7 @@ def fetch(url, limit):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--base-url', default='https://moranaservicos.com.br/site/')
+    parser.add_argument('--base-url', default='https://moranaservicos.com.br/')
     parser.add_argument('--revision', default='verificacao')
     args = parser.parse_args()
     base = args.base_url.rstrip('/') + '/'
@@ -39,7 +39,8 @@ def main():
         parser.error('Informe uma URL HTTPS sem credenciais, consulta ou fragmento.')
 
     source = Path(__file__).resolve().parents[1] / 'dist'
-    files = sorted(path for path in source.rglob('*') if path.is_file() and path.suffix.lower() != '.php')
+    files = sorted(path for path in source.rglob('*') if path.is_file()
+                   and path.suffix.lower() != '.php' and path.name != '.htaccess')
     if not files:
         raise SystemExit('Não há arquivos para verificar em dist/.')
 
@@ -56,6 +57,11 @@ def main():
     try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
             checked = list(pool.map(check_file, files))
+        # Confira também a URL sem index.html para detectar a entrada antiga do WordPress.
+        home_url = base + '?' + urllib.parse.urlencode({'morana_deploy': args.revision})
+        expected_home = (source / 'index.html').read_bytes()
+        if fetch(home_url, len(expected_home)) != expected_home:
+            raise ValueError('A página inicial do domínio ainda não corresponde ao site Morana.')
         contact = json.loads(fetch(url_for('contato.php'), 4096))
         if (not isinstance(contact, dict) or type(contact.get('available')) is not bool
                 or contact.get('recipient') != 'comercial@moranaservicos.com.br'):
