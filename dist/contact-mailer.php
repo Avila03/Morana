@@ -60,6 +60,39 @@ function morana_smtp_supported(): bool
     return extension_loaded('openssl') && (function_exists('stream_socket_client') || function_exists('fsockopen'));
 }
 
+function morana_smtp_prepare_private_directory(string $directory): bool
+{
+    if (is_link($directory) || (!is_dir($directory) && !@mkdir($directory, 0700, true) && !is_dir($directory))) {
+        return false;
+    }
+    $permissions = @fileperms($directory);
+    return $permissions !== false && ($permissions & 0077) === 0;
+}
+
+function morana_smtp_storage_probe(string $directory): bool
+{
+    if (!morana_smtp_prepare_private_directory($directory)) {
+        return false;
+    }
+    $path = $directory . '/.check-' . bin2hex(random_bytes(16));
+    $mask = umask(0077);
+    try {
+        $file = @fopen($path, 'x');
+    } finally {
+        umask($mask);
+    }
+    if ($file === false) {
+        return false;
+    }
+    try {
+        $stat = fstat($file);
+        return fwrite($file, 'morana') === 6 && fflush($file) && is_array($stat) && ($stat['mode'] & 0077) === 0;
+    } finally {
+        fclose($file);
+        @unlink($path);
+    }
+}
+
 function morana_smtp_create_mailer(array $config): \PHPMailer\PHPMailer\PHPMailer
 {
     require_once __DIR__ . '/vendor/phpmailer/Exception.php';
@@ -219,7 +252,8 @@ function morana_setup_handle(array $data, array $server, array $settings, string
                 }
             }
         }
-        return morana_contact_result(200, 'Diagnóstico concluído sem autenticar ou enviar mensagens.', ['smtp_tls' => $ports]);
+        return morana_contact_result(200, 'Diagnóstico concluído sem autenticar ou enviar mensagens.',
+            ['smtp_tls' => $ports, 'private_storage' => morana_smtp_storage_probe($directory)]);
     }
     $password = $data['password'] ?? null;
     $port = (string) ($data['port'] ?? '465');
@@ -232,8 +266,7 @@ function morana_setup_handle(array $data, array $server, array $settings, string
     if (isset($limit['error']) || empty($limit['allowed'])) {
         return morana_contact_result(429, 'Aguarde alguns minutos antes de tentar novamente.');
     }
-    if (is_link($directory) || (!is_dir($directory) && !@mkdir($directory, 0700, true) && !is_dir($directory))
-        || (@fileperms($directory) & 0077) !== 0 || is_link($directory . '/setup.lock')) {
+    if (!morana_smtp_prepare_private_directory($directory) || is_link($directory . '/setup.lock')) {
         return morana_contact_result(503, 'A hospedagem precisa permitir a gravação da configuração fora da pasta pública.');
     }
     $mask = umask(0077);

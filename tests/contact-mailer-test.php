@@ -102,7 +102,8 @@ try {
     $probes = [];
     $probeFactory = static function ($options) use (&$probes) { $probe = new MoranaFakeMailer(true); $probes[] = $probe; return $probe; };
     $result = morana_setup_handle(['action' => 'diagnostico', 'code' => $code], $server, $settings, $temporary . '/probe', $probeFactory);
-    check($result['status'] === 200 && count($probes) === 2 && !is_dir($temporary . '/probe'), 'diagnostic checks TLS ports without storing credentials');
+    check($result['status'] === 200 && count($probes) === 2 && !is_file($temporary . '/probe/smtp.json'), 'diagnostic checks TLS ports without storing credentials');
+    check($result['body']['private_storage'] && count(scandir($temporary . '/probe')) === 2, 'private storage probe removes its temporary file');
     foreach ($probes as $probe) {
         check(!$probe->SMTPAuth && $probe->Password === '' && $probe->messages === 0 && $probe->closed, 'diagnostic never authenticates or sends mail');
     }
