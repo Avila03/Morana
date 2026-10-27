@@ -4,7 +4,8 @@ declare(strict_types=1);
 ini_set('display_errors', '0');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
-header('Referrer-Policy: no-referrer');
+// Formulários nativos enviam Origin: null com no-referrer e seriam recusados pela validação de origem.
+header('Referrer-Policy: same-origin');
 header('X-Frame-Options: DENY');
 header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; font-src 'self'; form-action https://moranaservicos.com.br; base-uri 'none'; frame-ancestors 'none'");
 

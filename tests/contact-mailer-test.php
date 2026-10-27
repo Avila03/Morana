@@ -98,6 +98,10 @@ try {
     check($result['status'] === 403, 'setup rejects cross-origin requests');
     $result = morana_setup_handle($data, array_merge($server, ['HTTP_ORIGIN' => 'http://moranaservicos.com.br']), $settings, $temporary . '/http', $never);
     check($result['status'] === 403, 'setup requires HTTPS origin');
+    $result = morana_setup_handle($data, array_merge($server, ['HTTP_ORIGIN' => 'null']), $settings, $temporary . '/null-origin', $never);
+    check($result['status'] === 403, 'opaque form origins are rejected before credentials are used');
+    $result = morana_setup_handle($data, array_diff_key($server, ['HTTP_ORIGIN' => true]), $settings, $temporary . '/missing-origin', $never);
+    check($result['status'] === 403, 'missing form origins are rejected before credentials are used');
 
     $probes = [];
     $probeFactory = static function ($options) use (&$probes) { $probe = new MoranaFakeMailer(true); $probes[] = $probe; return $probe; };
