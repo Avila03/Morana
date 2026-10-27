@@ -8,7 +8,9 @@ parser.add_argument('--output', type=Path, default=Path('artifacts/morana-locawe
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 source = root / 'dist'
-required = ['index.html', 'styles.css', 'app.js', 'contato.php', 'contact-handler.php']
+required = ['index.html', 'styles.css', 'app.js', 'contato.php', 'contact-handler.php', 'contact-mailer.php',
+            'configurar-contato.php', 'contact-setup-key.php', 'vendor/phpmailer/PHPMailer.php',
+            'vendor/phpmailer/SMTP.php', 'vendor/phpmailer/Exception.php', 'vendor/phpmailer/LICENSE']
 for name in required:
     if not (source / name).is_file():
         raise SystemExit(f'Arquivo obrigatório ausente: {name}')

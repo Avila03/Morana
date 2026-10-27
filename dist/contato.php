@@ -6,13 +6,13 @@ header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
-require_once __DIR__ . '/contact-handler.php';
+require_once __DIR__ . '/contact-mailer.php';
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($method === 'GET' || $method === 'HEAD') {
     http_response_code(200);
     if ($method !== 'HEAD') {
-        echo json_encode(['available' => function_exists('mail'), 'recipient' => MORANA_COMMERCIAL_EMAIL]);
+        echo json_encode(morana_contact_transport());
     }
     exit;
 }
@@ -31,20 +31,7 @@ if (!in_array($contentType, ['application/x-www-form-urlencoded', 'multipart/for
 
 $storage = sys_get_temp_dir() . '/morana-contact-' . substr(hash('sha256', __DIR__), 0, 20);
 try {
-    $result = morana_handle_contact($_POST, $_SERVER, $storage, static function (array $email): bool {
-        if (!function_exists('mail')) {
-            return false;
-        }
-        $headers = implode("\n", [
-            'MIME-Version: 1.0',
-            'Content-Type: text/plain; charset=UTF-8',
-            'From: Morana <' . $email['from'] . '>',
-            'Return-Path: ' . $email['from'],
-            'Reply-To: ' . $email['reply_to'],
-        ]);
-        // Locaweb Linux / Postfix: envelope e From usam o endereço do domínio.
-        return @mail($email['to'], $email['subject'], $email['body'], $headers, '-r' . $email['from']);
-    });
+    $result = morana_handle_contact($_POST, $_SERVER, $storage, 'morana_contact_send_mail');
 } catch (Throwable $error) {
     $result = morana_contact_result(503, 'O envio está indisponível agora. Escreva para ' . MORANA_COMMERCIAL_EMAIL . '.');
 }

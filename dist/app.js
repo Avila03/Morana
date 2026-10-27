@@ -173,7 +173,7 @@ contactForm.addEventListener('submit',async event => {
     if(!available){showContactResult(fields,false);return;}
     submitLabel.textContent='Enviando…';
     requestController=new AbortController();
-    timer=window.setTimeout(()=>requestController?.abort(),15000);
+    timer=window.setTimeout(()=>requestController?.abort(),25000);
     const response=await fetch('contato.php',{
       method:'POST',headers:{Accept:'application/json','Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
       credentials:'omit',cache:'no-store',body:new URLSearchParams(fields).toString(),signal:requestController.signal

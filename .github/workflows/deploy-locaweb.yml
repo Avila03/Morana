@@ -31,9 +31,9 @@ jobs:
       - name: Verificar JavaScript, PHP e pacote de publicação
         run: |
           node --check dist/app.js
-          php -n -l dist/contato.php
-          php -n -l dist/contact-handler.php
+          for file in dist/*.php dist/vendor/phpmailer/*.php; do php -n -l "$file"; done
           php -n tests/contact-handler-test.php
+          php -n tests/contact-mailer-test.php
           python3 tests/contact-endpoint-test.py
           python3 -m py_compile scripts/check_locaweb_deploy.py
           python3 scripts/package_locaweb.py

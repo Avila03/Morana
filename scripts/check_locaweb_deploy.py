@@ -71,8 +71,9 @@ def main():
 
     message = f'Conferidos {len(checked)} arquivos em {base}'
     print(message)
-    contact_status = ('Envio PHP disponível; o recebimento de um teste ainda precisa ser conferido.'
-                      if contact['available'] else 'Envio direto pendente: a função mail() está indisponível na hospedagem.')
+    transport = contact.get('transport')
+    contact_status = (f'Envio pelo servidor disponível ({transport or "PHP"}); o recebimento de um teste ainda precisa ser conferido.'
+                      if contact['available'] else 'Envio direto pendente: configure o SMTP da caixa comercial pela página de ativação.')
     print(contact_status if contact['available'] else '::warning::' + contact_status)
     if os.environ.get('GITHUB_STEP_SUMMARY'):
         with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:

@@ -17,7 +17,7 @@ Os serviços e o método apresentados mantêm o conteúdo inicial; sua revisão 
 
 ## Executar localmente
 
-O visual usa HTML, CSS e JavaScript, sem instalação de dependências nem etapa de build. O encaminhamento pelo servidor usa PHP 7.4 ou superior, sem bibliotecas adicionais.
+O visual usa HTML, CSS e JavaScript, sem instalação de dependências nem etapa de build. O encaminhamento pelo servidor usa PHP 7.4 ou superior. A cópia necessária do PHPMailer 7.1.1 e sua licença já acompanham o pacote; não há instalação de Composer na hospedagem.
 
 Na raiz do repositório:
 
@@ -27,7 +27,7 @@ python3 -m http.server 8080 --directory dist
 
 Abra `http://localhost:8080` no navegador. Encerre o servidor com `Ctrl+C`.
 
-Nesse servidor estático, o formulário prepara um e-mail, sem informar que ele foi enviado. A hospedagem de produção precisa executar PHP e disponibilizar a função `mail()` para o envio direto.
+Nesse servidor estático, o formulário prepara um e-mail, sem informar que ele foi enviado. Em produção, o envio usa SMTP autenticado com TLS após a ativação da caixa comercial. Se não houver configuração SMTP e `mail()` estiver disponível, o envio nativo permanece como alternativa.
 
 ## Estrutura
 
@@ -38,11 +38,16 @@ dist/
   app.js           Abas de serviços, menu e fluxo de contato
   contato.php      Endpoint de disponibilidade e encaminhamento de contato
   contact-handler.php  Validação, proteção contra abuso e montagem da mensagem
+  contact-mailer.php   SMTP, configuração privada e validação da ativação
+  configurar-contato.php  Página HTTPS para ativar a caixa comercial
+  contact-setup-key.php   Impressão digital e validade do código de uso único
+  vendor/phpmailer/    Biblioteca e licença para SMTP
   assets/          Marca, fotografia, fontes e licença da tipografia
 AGENTS.md          Orientações para continuar o desenvolvimento
 docs/LOCAWEB.md    Instruções de publicação e teste de recebimento
 scripts/package_locaweb.py  Gera o ZIP de upload
 scripts/check_locaweb_deploy.py  Confere o site publicado por HTTPS
+scripts/rotate_contact_setup_key.py  Renova o código de ativação localmente
 .github/workflows/deploy-locaweb.yml  Publicação na Locaweb pelo Actions
 tests/            Testes sem envio real de e-mail
 .openai/hosting.json  Identidade da demo já publicada no Sites
@@ -66,7 +71,7 @@ O diretório a publicar é `dist/`. Não é necessário instalar pacotes nem exe
 
 Configure os Secrets `LOCAWEB_FTP_HOST`, `LOCAWEB_FTP_USER` e `LOCAWEB_FTP_PASSWORD` em **Settings → Secrets and variables → Actions**. Depois, use **Actions → Publicar na Locaweb → Run workflow**, selecionando `main`. Alterações do site na `main` também iniciam a publicação automática após essa configuração. Sem credenciais, nenhum arquivo é enviado. A conexão usa FTP na porta 21, autorizado para o servidor desta conta; a checagem do site publicado usa HTTPS.
 
-O workflow executa verificações e publica diretamente na raiz, sem etapa de backup. O pacote inclui `.htaccess` para priorizar `index.html`. Depois do envio, confere os arquivos públicos e a página inicial por HTTPS. A disponibilidade do envio PHP é informada separadamente; publicar arquivos não habilita `mail()` no servidor. Consulte [as instruções completas](docs/LOCAWEB.md#conectar-github-e-locaweb).
+O workflow executa verificações e publica diretamente na raiz, sem etapa de backup. O pacote inclui `.htaccess` para priorizar `index.html`. Depois do envio, confere os arquivos públicos e a página inicial por HTTPS. A disponibilidade do contato é informada separadamente; a caixa SMTP deve ser ativada pela página segura. Consulte [as instruções completas](docs/LOCAWEB.md#ativar-o-formulario-por-smtp).
 
 Para publicar manualmente, envie o **conteúdo** de `dist/` para a pasta escolhida na hospedagem.
 
@@ -80,6 +85,8 @@ O ZIP será criado em `artifacts/morana-locaweb.zip`. Leia [as instruções de p
 
 O envio PHP usa o e-mail comercial como destinatário, remetente e envelope de retorno; o e-mail do visitante fica no `Reply-To`. Os campos são validados no servidor, há um campo de detecção de preenchimento automatizado e limites temporários de envio. Os contadores ficam fora da pasta pública e não guardam nome, e-mail, mensagem nem IP em texto.
 
+A ativação em `https://moranaservicos.com.br/configurar-contato.php` exige um código aleatório de uso único, válido por 24 horas. A senha da caixa postal é informada somente nessa página HTTPS; a configuração fica em `.morana-private/smtp.json`, fora de `public_html`, com acesso privado. A senha não passa pelo GitHub nem pelo FTP de publicação. O SMTP usa `email-ssl.com.br`, porta 465 com TLS, ou 587 com STARTTLS; certificados são verificados. Salvar a configuração testa autenticação sem enviar uma mensagem. O recebimento final deve ser conferido com um teste pelo formulário.
+
 O GitHub Pages publica a prévia em [avila03.github.io/Morana/dist/](https://avila03.github.io/Morana/dist/). Como ele não executa PHP, ali o formulário prepara a mensagem para envio no aplicativo de e-mail.
 
 A demonstração existente está em [morana-consultoria-demo.pastellion131.chatgpt.site](https://morana-consultoria-demo.pastellion131.chatgpt.site), com acesso pela conta ChatGPT autorizada. O arquivo `.openai/hosting.json` preserva a identidade desse site. Um commit no GitHub, por si só, não atualiza essa demonstração automaticamente.
@@ -91,6 +98,7 @@ node --check dist/app.js
 php -l dist/contato.php
 php -l dist/contact-handler.php
 php tests/contact-handler-test.php
+php tests/contact-mailer-test.php
 ```
 
-Os testes do servidor substituem o transporte de e-mail por uma função local e não enviam mensagens a ninguém. Verifique o recebimento em `comercial@moranaservicos.com.br` depois do upload à Locaweb: o retorno positivo de `mail()` confirma o aceite pelo servidor de envio, não a entrega final.
+Os testes do servidor substituem o transporte de e-mail por uma função local e não enviam mensagens a ninguém. Verifique o recebimento em `comercial@moranaservicos.com.br` após a ativação: o aceite pelo servidor SMTP ou por `mail()` não comprova a entrega à caixa postal.

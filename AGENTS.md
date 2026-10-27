@@ -17,12 +17,14 @@
 - O contato oficial é `comercial@moranaservicos.com.br`. Não há WhatsApp por enquanto.
 - A empresa atende diferentes portes e segmentos; região e modalidade de atendimento não devem restringir a apresentação.
 - Em hospedagem PHP, `contato.php` encaminha o formulário ao e-mail comercial. Em hospedagem estática, o formulário prepara uma mensagem para o aplicativo de e-mail; esse fluxo nunca deve informar que a mensagem já foi enviada.
-- O aceite de `mail()` confirma o encaminhamento ao servidor de envio, não a entrega à caixa postal. O recebimento final precisa ser verificado após a publicação na Locaweb.
+- SMTP autenticado é o transporte preferencial, pois `mail()` está indisponível na conta. A biblioteca PHPMailer 7.1.1 está incluída em `dist/vendor/phpmailer/` com sua licença e origem. O aceite SMTP ou de `mail()` confirma o encaminhamento ao servidor de envio, não a entrega à caixa postal. O recebimento final precisa ser verificado após a ativação na Locaweb.
+- A senha comercial é informada apenas em `configurar-contato.php`, por HTTPS, com código aleatório de uso único. Fica em `.morana-private/smtp.json` fora da pasta pública; nunca publique essa senha pelo GitHub, FTP ou artefatos. `contact-setup-key.php` contém somente SHA-256 e validade do código. Para renovar, use o gerador local, nunca em logs públicos. Um código consumido não pode reconfigurar a caixa.
+- Preserve TLS obrigatório e validação dos certificados no SMTP; host, conta de envio e destinatário são fixos. A página de ativação autentica a caixa sem enviar uma mensagem. O diagnóstico protegido testa conectividade sem autenticação e sem envio.
 
 ## Verificação
 
 - Para alterações no JavaScript, execute `node --check dist/app.js`.
-- Para alterações no envio, execute `php -l dist/contato.php`, `php -l dist/contact-handler.php` e `php tests/contact-handler-test.php`. Os testes usam transporte falso e não enviam mensagens reais.
+- Para alterações no envio, confira a sintaxe de `dist/*.php` e `dist/vendor/phpmailer/*.php`, execute `php tests/contact-handler-test.php`, `php tests/contact-mailer-test.php` e `python3 tests/contact-endpoint-test.py`. Os testes usam transporte falso e não enviam mensagens reais.
 - Confira os caminhos de imagens, fontes e links internos depois de mover arquivos.
 - Para alterações visuais, revise computador e celular e teste as interações afetadas, usando o fluxo de preview disponível no ambiente.
 - Não introduza frameworks, banco de dados ou dependências sem necessidade para a solicitação.
