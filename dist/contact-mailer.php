@@ -123,16 +123,26 @@ function morana_smtp_create_mailer(array $config): \PHPMailer\PHPMailer\PHPMaile
 
 function morana_smtp_send_message(array $email, array $config, ?callable $factory = null): bool
 {
+    return morana_smtp_deliver($email, MORANA_COMMERCIAL_EMAIL, $config, $factory);
+}
+
+/** Uso interno: o contato comercial mantém destinatário fixo; a confirmação tem texto fixo e endereço validado. */
+function morana_smtp_deliver(array $email, string $recipient, array $config, ?callable $factory = null): bool
+{
     $mailer = null;
     try {
         $mailer = $factory ? $factory($config) : morana_smtp_create_mailer($config);
         $mailer->setFrom(MORANA_COMMERCIAL_EMAIL, 'Morana');
         $mailer->Sender = MORANA_COMMERCIAL_EMAIL;
-        $mailer->addAddress(MORANA_COMMERCIAL_EMAIL);
+        $mailer->addAddress($recipient);
         $mailer->addReplyTo($email['reply_to']);
         $mailer->isHTML(false);
         $mailer->Subject = $email['subject'];
         $mailer->Body = $email['body'];
+        if (!empty($email['auto_reply'])) {
+            $mailer->addCustomHeader('Auto-Submitted', 'auto-replied');
+            $mailer->addCustomHeader('X-Auto-Response-Suppress', 'All');
+        }
         return $mailer->send() === true;
     } catch (Throwable $error) {
         return false;
@@ -141,6 +151,26 @@ function morana_smtp_send_message(array $email, array $config, ?callable $factor
             $mailer->smtpClose();
         }
     }
+}
+
+function morana_contact_receipt_message(string $recipient): ?array
+{
+    if (strlen($recipient) > 180 || preg_match('/[\r\n\x00]/', $recipient)
+        || !filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+        return null;
+    }
+    return ['to' => $recipient, 'from' => MORANA_COMMERCIAL_EMAIL, 'reply_to' => MORANA_COMMERCIAL_EMAIL, 'auto_reply' => true,
+        'subject' => 'Recebemos seu contato | Morana',
+        'body' => "Olá!\n\nRecebemos sua solicitação pelo site da Morana.\n\n"
+            . "Nossa equipe comercial analisará seu contato e responderá por e-mail para entender o momento da sua empresa e conversar sobre os próximos passos.\n\n"
+            . 'Para complementar sua solicitação, responda a esta mensagem ou escreva para ' . MORANA_COMMERCIAL_EMAIL . ".\n\n"
+            . "Se você não preencheu o formulário, pode ignorar esta confirmação.\n\nMorana Serviços LTDA\nhttps://moranaservicos.com.br/\n"];
+}
+
+function morana_smtp_send_receipt(string $recipient, array $config, ?callable $factory = null): bool
+{
+    $email = morana_contact_receipt_message($recipient);
+    return $email !== null && morana_smtp_deliver($email, $recipient, $config, $factory);
 }
 
 function morana_contact_transport(): array
@@ -165,6 +195,25 @@ function morana_contact_send_mail(array $email): bool
         'Return-Path: ' . MORANA_COMMERCIAL_EMAIL, 'Reply-To: ' . $email['reply_to'],
     ]);
     return @mail(MORANA_COMMERCIAL_EMAIL, $email['subject'], $email['body'], $headers, '-r' . MORANA_COMMERCIAL_EMAIL);
+}
+
+function morana_contact_send_receipt(string $recipient): bool
+{
+    $email = morana_contact_receipt_message($recipient);
+    if ($email === null) {
+        return false;
+    }
+    $config = morana_smtp_load_config();
+    if ($config !== null) {
+        return morana_smtp_supported() && morana_smtp_send_receipt($recipient, $config);
+    }
+    if (!function_exists('mail')) {
+        return false;
+    }
+    $headers = implode("\n", ['MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8',
+        'From: Morana <' . MORANA_COMMERCIAL_EMAIL . '>', 'Return-Path: ' . MORANA_COMMERCIAL_EMAIL,
+        'Reply-To: ' . MORANA_COMMERCIAL_EMAIL, 'Auto-Submitted: auto-replied', 'X-Auto-Response-Suppress: All']);
+    return @mail($recipient, $email['subject'], $email['body'], $headers, '-r' . MORANA_COMMERCIAL_EMAIL);
 }
 
 function morana_setup_key_valid(string $code, array $settings, ?array $config, ?int $now = null): bool

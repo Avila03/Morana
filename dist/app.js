@@ -7,6 +7,7 @@ const services = {
   pessoas: {tag:'PESSOAS',icon:'people',title:'Pessoas alinhadas movem a empresa na mesma direção.',description:'Aproxime os objetivos da empresa do dia a dia da equipe. Desenvolva uma estrutura mais clara para a liderança, a comunicação e a responsabilidade de cada pessoa.',deliverables:['Clareza de papéis e responsabilidades','Alinhamento da equipe aos objetivos do negócio','Rotinas de liderança e acompanhamento'],interest:'Pessoas e liderança',index:'04'}
 };
 const tabs = [...document.querySelectorAll('[data-service]')];
+const servicePaths = {estrategia:'planejamento-estrategico',financeiro:'gestao-financeira',processos:'processos-e-operacao',pessoas:'pessoas-e-lideranca'};
 function selectService(key, moveFocus = false) {
   const item = services[key];
   if (!item) return;
@@ -34,6 +35,7 @@ function selectService(key, moveFocus = false) {
     return li;
   }));
   document.getElementById('service-contact').dataset.interest = item.interest;
+  document.getElementById('service-details').href = 'solucoes/' + servicePaths[key] + '/';
   document.getElementById('painel-solucao').setAttribute('aria-labelledby','tab-' + key);
 }
 tabs.forEach((tab, index) => {
@@ -44,6 +46,25 @@ tabs.forEach((tab, index) => {
   });
 });
 document.querySelectorAll('[data-select-service]').forEach(link => link.addEventListener('click', () => selectService(link.dataset.selectService)));
+
+const challenges = {
+  financeiro:{title:'Veja o que fica entre vender e ter resultado.',description:'Entender custos, margens e fluxo de caixa ajuda a identificar onde os recursos estão sendo consumidos e quais decisões precisam de atenção.'},
+  pessoas:{title:'Distribua responsabilidades. Dê espaço à equipe.',description:'Papéis claros e rotinas de liderança ajudam a organizar decisões, alinhar a equipe e reduzir a concentração de tarefas em uma pessoa.'},
+  processos:{title:'Encontre os gargalos da sua rotina.',description:'Mapear como o trabalho acontece permite identificar retrabalho, organizar etapas e definir responsabilidades para uma operação mais clara.'},
+  estrategia:{title:'Transforme a intenção de crescer em um plano.',description:'Prioridades, objetivos e responsáveis definidos ajudam a conectar o futuro que a empresa deseja às ações que precisa executar agora.'}
+};
+document.querySelectorAll('[data-challenge]').forEach(button => button.addEventListener('click', () => {
+  const key=button.dataset.challenge;
+  const item=services[key];
+  document.querySelectorAll('[data-challenge]').forEach(choice => choice.setAttribute('aria-pressed',String(choice===button)));
+  document.getElementById('challenge-tag').textContent=item.interest;
+  document.getElementById('challenge-heading').textContent=challenges[key].title;
+  document.getElementById('challenge-description').textContent=challenges[key].description;
+  document.getElementById('challenge-contact').dataset.interest=item.interest;
+  document.getElementById('challenge-details').href='solucoes/'+servicePaths[key]+'/';
+  document.getElementById('challenge-result').hidden=false;
+  document.getElementById('challenge-result').scrollIntoView({block:'nearest',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+}));
 
 const menuButton = document.querySelector('.menu-toggle');
 const mobileNav = document.getElementById('mobile-nav');
@@ -60,6 +81,7 @@ window.matchMedia('(min-width:761px)').addEventListener('change',event => {if(ev
 
 const contactDialog = document.getElementById('contact-dialog');
 const contactForm = document.getElementById('contact-form');
+const contactEndpoint = new URL(contactForm.getAttribute('action'), window.location.href);
 const infoDialog = document.getElementById('privacy-info');
 const formView = document.getElementById('contact-form-view');
 const successView = document.getElementById('contact-success-view');
@@ -79,7 +101,7 @@ async function discoverContactServer() {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), 4000);
   try {
-    const response = await fetch('contato.php', {headers:{Accept:'application/json'},cache:'no-store',credentials:'omit',signal:controller.signal});
+    const response = await fetch(contactEndpoint, {headers:{Accept:'application/json'},cache:'no-store',credentials:'omit',signal:controller.signal});
     if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) return false;
     const data = await response.json();
     return data.available === true && data.recipient === commercialEmail;
@@ -94,7 +116,7 @@ function updateContactTransport() {
 }
 const contactServerReady = discoverContactServer().then(available => {serverAvailable=available;updateContactTransport();return available;});
 
-function showContactResult(fields, sent) {
+function showContactResult(fields, sent, receiptSent = false) {
   const name = String(fields.get('nome')).trim();
   const company = String(fields.get('empresa')).trim();
   const interest = String(fields.get('interesse'));
@@ -108,7 +130,7 @@ function showContactResult(fields, sent) {
   document.getElementById('summary-company').textContent = company;
   document.getElementById('summary-interest').textContent = interest;
   document.getElementById('contact-result-note').textContent = sent
-    ? `Se precisar complementar sua solicitação, escreva diretamente para ${commercialEmail}.`
+    ? (receiptSent ? 'Uma confirmação também foi encaminhada ao e-mail informado. ' : '') + 'Nossa equipe comercial analisará sua solicitação e responderá por e-mail.'
     : 'Sua mensagem ainda não foi enviada. Confirme o envio no seu aplicativo de e-mail.';
   document.getElementById('contact-draft-actions').hidden = sent;
   document.getElementById('contact-draft-text').value = sent ? '' : body;
@@ -130,7 +152,7 @@ document.querySelectorAll('[data-contact]').forEach(button => button.addEventLis
   formError.hidden = true;
   formError.textContent = '';
   updateContactTransport();
-  document.getElementById('contact-interest').value = button.dataset.interest || 'Ainda quero entender melhor';
+  document.getElementById('contact-interest').value = button.dataset.interest || document.body.dataset.interest || 'Ainda quero entender melhor';
   document.body.classList.add('modal-open');
   contactDialog.showModal();
 }));
@@ -173,8 +195,8 @@ contactForm.addEventListener('submit',async event => {
     if(!available){showContactResult(fields,false);return;}
     submitLabel.textContent='Enviando…';
     requestController=new AbortController();
-    timer=window.setTimeout(()=>requestController?.abort(),25000);
-    const response=await fetch('contato.php',{
+    timer=window.setTimeout(()=>requestController?.abort(),45000);
+    const response=await fetch(contactEndpoint,{
       method:'POST',headers:{Accept:'application/json','Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
       credentials:'omit',cache:'no-store',body:new URLSearchParams(fields).toString(),signal:requestController.signal
     });
@@ -185,7 +207,7 @@ contactForm.addEventListener('submit',async event => {
       failure.displayMessage=typeof payload?.message==='string' ? payload.message : 'Não foi possível confirmar o envio. Seu texto foi mantido; você pode escrever diretamente para nosso e-mail.';
       throw failure;
     }
-    showContactResult(fields,true);
+    showContactResult(fields,true,payload.receipt_sent===true);
   } catch(error) {
     if(thisRequest!==requestSerial)return;
     formError.textContent=error.name==='AbortError'

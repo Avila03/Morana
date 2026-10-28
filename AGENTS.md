@@ -6,6 +6,7 @@
 - Branch principal: `main`.
 - Continue a partir do estado atual desse repositório. Não recrie uma demo separada nem use outro projeto como fonte de código.
 - Os arquivos em `dist/` são o código-fonte do site estático; não há etapa de build.
+- As quatro páginas em `dist/solucoes/`, o sitemap e o robots são atualizados por `python3 scripts/build_service_pages.py`, reutilizando o cabeçalho, contato e rodapé de `dist/index.html`. Após editar esses trechos compartilhados, regenere as páginas e confira `--check`; nenhum gerador roda na hospedagem.
 
 ## Identidade e conteúdo
 
@@ -19,11 +20,13 @@
 - Em hospedagem PHP, `contato.php` encaminha o formulário ao e-mail comercial. Em hospedagem estática, o formulário prepara uma mensagem para o aplicativo de e-mail; esse fluxo nunca deve informar que a mensagem já foi enviada.
 - SMTP autenticado é o transporte preferencial, pois `mail()` está indisponível na conta. A biblioteca PHPMailer 7.1.1 está incluída em `dist/vendor/phpmailer/` com sua licença e origem. O aceite SMTP ou de `mail()` confirma o encaminhamento ao servidor de envio, não a entrega à caixa postal. O recebimento final precisa ser verificado após a ativação na Locaweb.
 - A senha comercial é informada apenas em `configurar-contato.php`, por HTTPS, com código aleatório de uso único. Fica em `.morana-private/smtp.json` fora da pasta pública; nunca publique essa senha pelo GitHub, FTP ou artefatos. `contact-setup-key.php` contém somente SHA-256 e validade do código. Para renovar, use o gerador local, nunca em logs públicos. Um código consumido não pode reconfigurar a caixa.
-- Preserve TLS obrigatório e validação dos certificados no SMTP; host, conta de envio e destinatário são fixos. A página de ativação autentica a caixa sem enviar uma mensagem. O diagnóstico protegido testa conectividade sem autenticação e sem envio.
+- Preserve TLS obrigatório e validação dos certificados no SMTP; host, conta de envio e destinatário do contato comercial são fixos. A página de ativação autentica a caixa sem enviar uma mensagem. O diagnóstico protegido testa conectividade sem autenticação e sem envio.
+- O usuário aprovou uma confirmação automática de recebimento ao visitante. Ela só ocorre depois do aceite da solicitação comercial, tem texto fixo sem refletir os campos do formulário e só usa o endereço de visitante validado. Remetente, envelope e Reply-To da confirmação continuam comerciais. Limite uma confirmação por endereço a cada 15 minutos; falhas nessa confirmação não invalidam nem repetem o contato já aceito. Nunca afirme entrega final à caixa postal com base no aceite SMTP.
 
 ## Verificação
 
 - Para alterações no JavaScript, execute `node --check dist/app.js`.
+- Para páginas e navegação, execute `python3 scripts/build_service_pages.py --check` e `python3 tests/site-test.py`.
 - Para alterações no envio, confira a sintaxe de `dist/*.php` e `dist/vendor/phpmailer/*.php`, execute `php tests/contact-handler-test.php`, `php tests/contact-mailer-test.php` e `python3 tests/contact-endpoint-test.py`. Os testes usam transporte falso e não enviam mensagens reais.
 - Confira os caminhos de imagens, fontes e links internos depois de mover arquivos.
 - Para alterações visuais, revise computador e celular e teste as interações afetadas, usando o fluxo de preview disponível no ambiente.

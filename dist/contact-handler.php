@@ -30,7 +30,7 @@ function morana_contact_origin_allowed(array $server): bool
 }
 
 /** Contadores temporários; não armazena nome, e-mail, mensagem ou IP em texto. */
-function morana_contact_rate_limit(string $directory, string $ip, int $now): array
+function morana_contact_rate_limit(string $directory, string $ip, int $now, int $clientLimit = 3): array
 {
     if (is_link($directory) || (!is_dir($directory) && !@mkdir($directory, 0700, true) && !is_dir($directory))) {
         return ['error' => true];
@@ -60,8 +60,8 @@ function morana_contact_rate_limit(string $directory, string $ip, int $now): arr
         $clientEntries = array_values(array_filter($entries, static function ($entry) use ($key): bool {
             return $entry['client'] === $key;
         }));
-        if (count($clientEntries) >= 3 || count($entries) >= 30) {
-            $oldest = count($clientEntries) >= 3 ? $clientEntries[0]['time'] : $entries[0]['time'];
+        if (count($clientEntries) >= $clientLimit || count($entries) >= 30) {
+            $oldest = count($clientEntries) >= $clientLimit ? $clientEntries[0]['time'] : $entries[0]['time'];
             return ['allowed' => false, 'retry_after' => max(1, $oldest + 900 - $now)];
         }
         $entries[] = ['time' => $now, 'client' => $key];
@@ -78,7 +78,7 @@ function morana_contact_rate_limit(string $directory, string $ip, int $now): arr
 }
 
 /** O transporte é injetável para testar o fluxo sem enviar e-mails reais. */
-function morana_handle_contact(array $data, array $server, string $rateDirectory, callable $sendMail, ?int $now = null): array
+function morana_handle_contact(array $data, array $server, string $rateDirectory, callable $sendMail, ?int $now = null, ?callable $sendReceipt = null): array
 {
     if (($server['REQUEST_METHOD'] ?? '') !== 'POST') {
         return morana_contact_result(405, 'Utilize o formulário de contato.');
@@ -149,5 +149,17 @@ function morana_handle_contact(array $data, array $server, string $rateDirectory
     if (!$accepted) {
         return morana_contact_result(503, 'Não foi possível encaminhar a mensagem agora. Seu texto foi mantido. Escreva para ' . MORANA_COMMERCIAL_EMAIL . '.');
     }
-    return morana_contact_result(200, 'Solicitação aceita pelo servidor para encaminhamento à equipe comercial.');
+    // A confirmação só é tentada após o aceite comercial. Falhas não invalidam nem repetem o contato.
+    $receiptSent = false;
+    if ($sendReceipt !== null) {
+        try {
+            $receiptLimit = morana_contact_rate_limit($rateDirectory . '/receipts', strtolower($values['email']), $now ?? time(), 1);
+            if (!empty($receiptLimit['allowed'])) {
+                $receiptSent = $sendReceipt($values['email']) === true;
+            }
+        } catch (Throwable $error) {
+            $receiptSent = false;
+        }
+    }
+    return morana_contact_result(200, 'Solicitação aceita pelo servidor para encaminhamento à equipe comercial.', ['receipt_sent' => $receiptSent]);
 }

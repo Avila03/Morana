@@ -9,6 +9,7 @@ on:
       - '.github/workflows/deploy-locaweb.yml'
       - 'scripts/check_locaweb_deploy.py'
       - 'scripts/package_locaweb.py'
+      - 'scripts/build_service_pages.py'
       - 'tests/**'
 
 permissions:
@@ -35,6 +36,8 @@ jobs:
           php -n tests/contact-handler-test.php
           php -n tests/contact-mailer-test.php
           python3 tests/contact-endpoint-test.py
+          python3 scripts/build_service_pages.py --check
+          python3 tests/site-test.py
           python3 -m py_compile scripts/check_locaweb_deploy.py
           python3 scripts/package_locaweb.py
 

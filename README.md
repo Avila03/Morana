@@ -8,6 +8,9 @@ Este repositório é a base oficial para o desenvolvimento do site. A primeira v
 
 - Apresentação institucional da Morana.
 - Soluções de gestão com seleção interativa: estratégia, finanças, processos e pessoas.
+- Seleção do desafio com indicação da solução e interesse já preenchido no contato.
+- Quatro páginas próprias para os serviços, sitemap, metadados de busca e imagem de compartilhamento da marca.
+- Confirmação automática por e-mail após o aceite do contato comercial, com texto fixo e controle de envios repetidos.
 - Método de trabalho e perguntas frequentes.
 - Layout para computador e celular, menu móvel e navegação por teclado.
 - Contato oficial em `comercial@moranaservicos.com.br`, com links diretos de e-mail.
@@ -93,8 +96,12 @@ A demonstração existente está em [morana-consultoria-demo.pastellion131.chatg
 
 ## Verificação
 
+As páginas publicadas continuam estáticas, sem instalação de dependências na Locaweb. Ao alterar o cabeçalho, o formulário ou o rodapé de `dist/index.html`, execute `python3 scripts/build_service_pages.py` para atualizar as páginas de serviços. O texto específico de cada serviço está nesse gerador. A imagem social tem fonte vetorial em `dist/assets/morana-compartilhamento.svg` e versão PNG para compartilhamento.
+
 ```bash
 node --check dist/app.js
+python3 scripts/build_service_pages.py --check
+python3 tests/site-test.py
 php -l dist/contato.php
 php -l dist/contact-handler.php
 php tests/contact-handler-test.php

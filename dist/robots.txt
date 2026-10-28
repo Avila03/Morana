@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://moranaservicos.com.br/sitemap.xml

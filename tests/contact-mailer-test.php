@@ -90,6 +90,19 @@ try {
     $fake->sendAccepted = false;
     check(!morana_smtp_send_message($email, $config, static function () use ($fake) { return $fake; }), 'rejected SMTP submission never reports success');
 
+    $receipt = new MoranaFakeMailer(true);
+    $receipt->CharSet = 'UTF-8';
+    check(morana_smtp_send_receipt('visitante@example.com', $config, static function () use ($receipt) { return $receipt; }), 'SMTP confirmation reaches the validated visitor');
+    check($receipt->getToAddresses()[0][0] === 'visitante@example.com' && $receipt->From === MORANA_COMMERCIAL_EMAIL
+        && $receipt->Sender === MORANA_COMMERCIAL_EMAIL && array_values($receipt->getReplyToAddresses())[0][0] === MORANA_COMMERCIAL_EMAIL,
+        'confirmation sender, envelope and replies stay with Morana');
+    check(strpos($receipt->Body, 'Recebemos sua solicitação') !== false && strpos($receipt->Body, 'João') === false
+        && strpos($receipt->Body, 'Mensagem com acentuação') === false, 'confirmation has fixed text without reflecting submitted content');
+    check(strpos($receipt->getSentMIMEMessage(), 'Auto-Submitted: auto-replied') !== false, 'automatic replies are marked to avoid reply loops');
+    $neverReceipt = static function () { throw new RuntimeException('Transport must not be reached.'); };
+    check(!morana_smtp_send_receipt("visitante@example.com\r\nBcc: other@example.com", $config, $neverReceipt)
+        && !morana_smtp_send_receipt('invalid', $config, $neverReceipt), 'invalid confirmation recipients never reach SMTP');
+
     $never = static function () { throw new RuntimeException('Transport must not be reached.'); };
     $data = ['action' => 'salvar', 'code' => $code, 'password' => $config['password'], 'port' => '465'];
     $result = morana_setup_handle(array_merge($data, ['code' => 'wrong']), $server, $settings, $temporary . '/wrong', $never);

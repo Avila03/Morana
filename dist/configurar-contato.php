@@ -4,6 +4,7 @@ declare(strict_types=1);
 ini_set('display_errors', '0');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
+header('X-Robots-Tag: noindex, nofollow');
 // Formulários nativos enviam Origin: null com no-referrer e seriam recusados pela validação de origem.
 header('Referrer-Policy: same-origin');
 header('X-Frame-Options: DENY');

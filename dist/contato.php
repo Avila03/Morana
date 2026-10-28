@@ -5,6 +5,7 @@ ini_set('display_errors', '0');
 header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
+header('X-Robots-Tag: noindex, nofollow');
 
 require_once __DIR__ . '/contact-mailer.php';
 
@@ -31,7 +32,7 @@ if (!in_array($contentType, ['application/x-www-form-urlencoded', 'multipart/for
 
 $storage = sys_get_temp_dir() . '/morana-contact-' . substr(hash('sha256', __DIR__), 0, 20);
 try {
-    $result = morana_handle_contact($_POST, $_SERVER, $storage, 'morana_contact_send_mail');
+    $result = morana_handle_contact($_POST, $_SERVER, $storage, 'morana_contact_send_mail', null, 'morana_contact_send_receipt');
 } catch (Throwable $error) {
     $result = morana_contact_result(503, 'O envio está indisponível agora. Escreva para ' . MORANA_COMMERCIAL_EMAIL . '.');
 }

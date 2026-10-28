@@ -24,7 +24,7 @@ server = dict(REQUEST_METHOD='POST', HTTP_HOST='moranaservicos.com.br',
 with tempfile.TemporaryDirectory(prefix='morana-endpoint-test-') as temp:
     temporary = Path(temp)
     fake = temporary / 'sendmail'
-    fake.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "$MORANA_TEST_ARGS_FILE"\ncat > "$MORANA_TEST_MESSAGE_FILE"\nexit "${MORANA_TEST_MAIL_EXIT:-0}"\n')
+    fake.write_text('#!/bin/sh\nprintf "%s\\n" "$@" >> "$MORANA_TEST_ARGS_FILE"\nprintf "\\n---MORANA_MESSAGE---\\n" >> "$MORANA_TEST_MESSAGE_FILE"\ncat >> "$MORANA_TEST_MESSAGE_FILE"\nexit "${MORANA_TEST_MAIL_EXIT:-0}"\n')
     fake.chmod(0o700)
     mail_file = temporary / 'message.txt'
     args_file = temporary / 'args.txt'
@@ -66,6 +66,12 @@ with tempfile.TemporaryDirectory(prefix='morana-endpoint-test-') as temp:
     assert 'Content-Type: text/plain; charset=UTF-8' in message
     assert 'Quero organizar a gestão.' in message
     assert '-rcomercial@moranaservicos.com.br' in args_file.read_text()
+    assert data['receipt_sent'] is True
+    messages = message.split('---MORANA_MESSAGE---')[1:]
+    assert len(messages) == 2 and 'To: contato@example.com' in messages[1]
+    assert 'Reply-To: comercial@moranaservicos.com.br' in messages[1]
+    assert 'Recebemos sua solicitação' in messages[1] and 'Quero organizar a gestão.' not in messages[1]
+    assert 'Auto-Submitted: auto-replied' in messages[1]
 
     status, data = request(server, fields, mail_exit='1')
     assert status == 503 and data['ok'] is False
