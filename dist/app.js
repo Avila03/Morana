@@ -1,5 +1,6 @@
 'use strict';
 
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const services = {
   estrategia: {tag:'ESTRATÉGIA',icon:'target',title:'Saber onde chegar muda a forma de caminhar.',description:'Transforme objetivos em prioridades claras. Um olhar para o momento atual do negócio e um plano que conecta visão de futuro às decisões de hoje.',deliverables:['Diagnóstico do negócio e das oportunidades','Definição de objetivos e indicadores','Plano de ação com prioridades e responsáveis'],interest:'Planejamento estratégico',index:'01'},
   financeiro: {tag:'FINANÇAS',icon:'chart',title:'Entenda os números. Decida com mais segurança.',description:'Traga visibilidade para a saúde financeira da empresa. Organize as informações, compreenda custos e margens e tenha uma base mais clara para decidir.',deliverables:['Organização do fluxo de caixa e do orçamento','Análise de custos, despesas e margens','Indicadores para acompanhar a gestão financeira'],interest:'Gestão financeira',index:'02'},
@@ -23,6 +24,7 @@ function selectService(key, moveFocus = false) {
   document.getElementById('service-tag').textContent = item.tag;
   document.getElementById('service-icon-use').setAttribute('href', '#' + item.icon);
   document.getElementById('service-index').textContent = item.index;
+  document.getElementById('service-art-image').src = 'assets/servico-' + key + '.svg';
   const list = document.getElementById('service-deliverables');
   list.replaceChildren(...item.deliverables.map(text => {
     const li = document.createElement('li');
@@ -36,7 +38,12 @@ function selectService(key, moveFocus = false) {
   }));
   document.getElementById('service-contact').dataset.interest = item.interest;
   document.getElementById('service-details').href = 'solucoes/' + servicePaths[key] + '/';
-  document.getElementById('painel-solucao').setAttribute('aria-labelledby','tab-' + key);
+  const panel = document.getElementById('painel-solucao');
+  panel.setAttribute('aria-labelledby','tab-' + key);
+  if (panel.dataset.visual !== key && !reducedMotion.matches && typeof panel.animate === 'function') {
+    panel.animate([{opacity:.65,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'ease-out'});
+  }
+  panel.dataset.visual = key;
 }
 tabs.forEach((tab, index) => {
   tab.addEventListener('click', () => selectService(tab.dataset.service));
@@ -81,6 +88,11 @@ window.matchMedia('(min-width:761px)').addEventListener('change',event => {if(ev
 
 const contactDialog = document.getElementById('contact-dialog');
 const contactForm = document.getElementById('contact-form');
+contactForm.addEventListener('invalid', event => event.target.setAttribute('aria-invalid','true'), true);
+contactForm.addEventListener('input', event => {
+  if (event.target.validity?.valid) event.target.removeAttribute('aria-invalid');
+});
+contactForm.addEventListener('reset', () => contactForm.querySelectorAll('[aria-invalid]').forEach(field => field.removeAttribute('aria-invalid')));
 const contactEndpoint = new URL(contactForm.getAttribute('action'), window.location.href);
 const infoDialog = document.getElementById('privacy-info');
 const formView = document.getElementById('contact-form-view');
@@ -232,3 +244,61 @@ document.getElementById('copy-contact-message').addEventListener('click',async()
   try {await navigator.clipboard.writeText(draft.value);status.textContent='Mensagem copiada.';}
   catch {draft.focus();draft.select();status.textContent='Mensagem selecionada. Use a opção Copiar do seu dispositivo.';}
 });
+
+// O conteúdo permanece visível sem JavaScript e com movimento reduzido.
+const revealTargets = [...document.querySelectorAll('[data-reveal]')];
+let revealObserver;
+if ('IntersectionObserver' in window && !reducedMotion.matches) {
+  revealObserver = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-revealed');
+        revealObserver.unobserve(entry.target);
+      }
+    }
+  },{threshold:.08,rootMargin:'0px 0px 30px 0px'});
+  for (const element of revealTargets) {
+    if (element.getBoundingClientRect().top > window.innerHeight) {
+      element.classList.add('reveal-pending');
+      revealObserver.observe(element);
+    }
+  }
+}
+reducedMotion.addEventListener('change', event => {
+  if (event.matches) {
+    revealObserver?.disconnect();
+    revealTargets.forEach(element => element.classList.add('is-revealed'));
+    for (const animation of document.getElementById('painel-solucao')?.getAnimations?.() ?? []) animation.cancel();
+  }
+});
+
+const navLinks = [...document.querySelectorAll('.desktop-nav a,.mobile-nav a')];
+const localNav = navLinks.map(link => ({link,url:new URL(link.href)})).filter(item => item.url.pathname === window.location.pathname && item.url.hash);
+const navSections = [...new Set(localNav.map(item => document.getElementById(item.url.hash.slice(1))).filter(Boolean))];
+if ('IntersectionObserver' in window) {
+  const navObserver = new IntersectionObserver(entries => {
+    const active = entries.find(entry => entry.isIntersecting);
+    if (!active) return;
+    for (const item of localNav) {
+      if (item.url.hash === '#' + active.target.id) item.link.setAttribute('aria-current','location');
+      else item.link.removeAttribute('aria-current');
+    }
+  },{rootMargin:'-15% 0px -55% 0px',threshold:0});
+  navSections.forEach(section => navObserver.observe(section));
+}
+
+const siteHeader = document.querySelector('.site-header');
+let progressQueued = false;
+function queueReadingProgress() {
+  if (progressQueued) return;
+  progressQueued = true;
+  window.requestAnimationFrame(() => {
+    const maximum = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = maximum > 0 ? Math.min(1,Math.max(0,window.scrollY / maximum)) : 0;
+    siteHeader.style.setProperty('--reading-progress',String(progress));
+    progressQueued = false;
+  });
+}
+window.addEventListener('scroll',queueReadingProgress,{passive:true});
+window.addEventListener('resize',queueReadingProgress,{passive:true});
+queueReadingProgress();

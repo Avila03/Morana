@@ -14,6 +14,7 @@
 - Preserve a marca original e a paleta do manual: `#29383E`, `#516D79` e `#D7D7D6`.
 - Mantenha a tipografia Montserrat e seus arquivos locais; o logotipo já contém a tipografia original da marca.
 - Preserve o layout responsivo, a navegação por teclado, os estados de foco e o suporte a movimento reduzido.
+- `dist/brand.css` aplica a direção visual sobre `styles.css`: blocos claros/escuros, grafismos do M original, tratamento fotográfico por CSS e rodapé em grafite. As ilustrações `assets/servico-*.svg` são conceituais, sem indicadores ou resultados de clientes. Preserve o símbolo original e não trate os desenhos como dados reais. Entradas animadas são opcionais; conteúdo deve continuar acessível sem JavaScript ou com movimento reduzido.
 - Os textos e serviços da demo são propostas para validação. Não invente depoimentos, clientes, estatísticas, endereços, contatos ou credenciais da empresa.
 - O contato oficial é `comercial@moranaservicos.com.br`. Não há WhatsApp por enquanto.
 - A empresa atende diferentes portes e segmentos; região e modalidade de atendimento não devem restringir a apresentação.

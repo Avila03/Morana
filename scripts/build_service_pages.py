@@ -31,6 +31,13 @@ SERVICES = [
          work=[('Dar clareza aos papéis', 'Organizar responsabilidades e pontos de decisão, tornando mais claro o que se espera de cada atuação.'), ('Alinhar pessoas e objetivos', 'Conectar as prioridades da empresa à rotina da equipe e fortalecer a comunicação sobre o trabalho.'), ('Estruturar rotinas de liderança', 'Definir formas de acompanhamento, alinhamento e revisão para apoiar líderes e equipes na execução.')]),
 ]
 
+VISUALS = {
+    'planejamento-estrategico': ('estrategia', ['LEITURA', 'PRIORIDADES', 'AÇÃO']),
+    'gestao-financeira': ('financeiro', ['CAIXA', 'MARGENS', 'DECISÕES']),
+    'processos-e-operacao': ('processos', ['MAPEAR', 'ORGANIZAR', 'EVOLUIR']),
+    'pessoas-e-lideranca': ('pessoas', ['PAPÉIS', 'ALINHAMENTO', 'EQUIPE']),
+}
+
 
 def render(service, home):
     head = home.split('<body>', 1)[0]
@@ -57,19 +64,23 @@ def render(service, home):
     signals = ''.join('<li>'+esc(item)+'</li>' for item in service['signals'])
     work = ''.join('<article><h3>'+esc(label)+'</h3><p>'+esc(text)+'</p></article>' for label,text in service['work'])
     links = ''.join('<a href="../'+s['slug']+'/"'+(' aria-current="page"' if s==service else '')+'>'+esc(s['title'])+'</a>' for s in SERVICES)
+    visual, visual_labels = VISUALS[service['slug']]
+    art_caption = ''.join('<span>'+esc(label)+'</span>' for label in visual_labels)
     main = f'''<main id="conteudo">
+    <div class="service-stage">
     <section class="service-page-hero container" aria-labelledby="page-title">
       <nav class="breadcrumbs" aria-label="Localização"><a href="../../">Início</a><span aria-hidden="true">/</span><a href="../../#solucoes">Soluções</a><span aria-hidden="true">/</span><span aria-current="page">{esc(service['title'])}</span></nav>
-      <div class="service-page-intro"><div><p class="eyebrow">CONSULTORIA EM GESTÃO EMPRESARIAL</p><h1 id="page-title">{esc(service['title'])}<span>{esc(service['promise'])}</span></h1><p class="service-lead">{esc(service['lead'])}</p><button class="button" data-contact>Conversar sobre esta solução <svg class="icon"><use href="#arrow-up-right"/></svg></button></div><div class="service-page-mark" aria-hidden="true"><img src="assets/morana-simbolo.png" width="352" height="464" alt=""></div></div>
+      <div class="service-page-intro"><div><p class="eyebrow">CONSULTORIA EM GESTÃO EMPRESARIAL</p><h1 id="page-title">{esc(service['title'])}<span>{esc(service['promise'])}</span></h1><p class="service-lead">{esc(service['lead'])}</p><button class="button" data-contact>Conversar sobre esta solução <svg class="icon"><use href="#arrow-up-right"/></svg></button></div><figure class="service-page-art" aria-hidden="true" data-reveal><img src="assets/servico-{visual}.svg" width="420" height="300" alt=""><figcaption>{art_caption}</figcaption><p class="art-note">COMPOSIÇÃO CONCEITUAL</p></figure></div>
     </section>
-    <section class="service-page-body" aria-labelledby="service-work-title"><div class="container service-page-columns"><div><p class="eyebrow">RECONHECE ESSE CENÁRIO?</p><h2>Quando faz sentido<br><span>olhar para essa área.</span></h2><ul class="service-signals">{signals}</ul></div><div><p class="eyebrow">DA CONVERSA À PRÁTICA</p><h2 id="service-work-title">Como podemos atuar.</h2><div class="service-work">{work}</div><p class="service-scope">O escopo, as entregas e os prazos são definidos em uma proposta específica, a partir do momento e das prioridades da sua empresa.</p></div></div></section>
-    <section class="container service-first-step" id="contato" aria-labelledby="first-step-title"><div><p class="eyebrow">O PRIMEIRO PASSO</p><h2 id="first-step-title">Vamos entender<br><span>o seu momento.</span></h2><p>Conte o que sua empresa vive hoje. A primeira conversa ajuda a compreender o contexto antes de definir uma atuação.</p><button class="button" data-contact>Conte seu desafio <svg class="icon"><use href="#arrow-up-right"/></svg></button></div><ol class="service-next-steps"><li>Você compartilha o contexto da empresa.</li><li>A equipe comercial retorna por e-mail.</li><li>Conversamos sobre as prioridades e os próximos passos.</li></ol></section>
+    </div>
+    <section class="service-page-body" aria-labelledby="service-work-title"><div class="container service-page-columns"><div data-reveal><p class="eyebrow">RECONHECE ESSE CENÁRIO?</p><h2>Quando faz sentido<br><span>olhar para essa área.</span></h2><ul class="service-signals">{signals}</ul></div><div data-reveal><p class="eyebrow">DA CONVERSA À PRÁTICA</p><h2 id="service-work-title">Como podemos atuar.</h2><div class="service-work">{work}</div><p class="service-scope">O escopo, as entregas e os prazos são definidos em uma proposta específica, a partir do momento e das prioridades da sua empresa.</p></div></div></section>
+    <section class="container service-first-step" id="primeiro-passo" aria-labelledby="first-step-title"><div data-reveal><p class="eyebrow">O PRIMEIRO PASSO</p><h2 id="first-step-title">Vamos entender<br><span>o seu momento.</span></h2><p>Conte o que sua empresa vive hoje. A primeira conversa ajuda a compreender o contexto antes de definir uma atuação.</p><button class="button" data-contact>Conte seu desafio <svg class="icon"><use href="#arrow-up-right"/></svg></button></div><ol class="service-next-steps"><li>Você compartilha o contexto da empresa.</li><li>A equipe comercial retorna por e-mail.</li><li>Conversamos sobre as prioridades e os próximos passos.</li></ol></section>
     <nav class="container all-services" aria-label="Conheça outras soluções">{links}</nav>
   </main>
 '''
     page = head+'<body class="service-page" data-interest="'+esc(service['title'], quote=True)+'">'+shell+main+tail
     # Apenas recursos locais da raiz: âncoras dos símbolos SVG e links comerciais são preservados.
-    page = re.sub(r'((?:src|href|action)=")(assets/|styles\.css|app\.js|contato\.php)', r'\1../../\2', page)
+    page = re.sub(r'((?:src|href|action)=")(assets/|styles\.css|brand\.css|app\.js|contato\.php)', r'\1../../\2', page)
     return page
 
 

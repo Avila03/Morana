@@ -13,6 +13,8 @@ Este repositório é a base oficial para o desenvolvimento do site. A primeira v
 - Confirmação automática por e-mail após o aceite do contato comercial, com texto fixo e controle de envios repetidos.
 - Método de trabalho e perguntas frequentes.
 - Layout para computador e celular, menu móvel e navegação por teclado.
+- Contraste entre blocos claros e escuros, grafismos derivados do símbolo da marca e ilustrações conceituais próprias para cada serviço.
+- Movimento discreto nas entradas e trocas de serviço, com respeito à preferência por movimento reduzido. `dist/brand.css` reúne a direção visual sobre a base responsiva de `styles.css`.
 - Contato oficial em `comercial@moranaservicos.com.br`, com links diretos de e-mail.
 - Formulário com envio em PHP para a Locaweb; em hospedagem estática, prepara uma mensagem para revisão e envio no aplicativo de e-mail.
 
