@@ -21,6 +21,9 @@ class Page(HTMLParser):
         self.h1_count = 0
         self.schema = []
         self.in_schema = False
+        self.forms = set()
+        self.form_stack = []
+        self.submit_controls = {}
         self.feed(path.read_text())
 
     def handle_starttag(self, tag, attrs):
@@ -32,11 +35,17 @@ class Page(HTMLParser):
         if tag == 'meta': self.meta[attrs.get('property', attrs.get('name'))] = attrs.get('content')
         if tag == 'link' and attrs.get('rel') == 'canonical': self.canonical = attrs['href']
         if tag == 'script' and attrs.get('type') == 'application/ld+json': self.in_schema = True
+        if tag == 'form':
+            self.forms.add(attrs.get('id'))
+            self.form_stack.append(attrs.get('id'))
+        if tag == 'button' and attrs.get('type', 'submit') == 'submit':
+            self.submit_controls[attrs.get('id')] = attrs.get('form') or (self.form_stack[-1] if self.form_stack else None)
         for key in ('href', 'src', 'action'):
             if attrs.get(key): self.links.append(attrs[key])
 
     def handle_endtag(self, tag):
         if tag == 'script': self.in_schema = False
+        if tag == 'form': self.form_stack.pop()
 
     def handle_data(self, data):
         if self.in_schema: self.schema.append(json.loads(data))
@@ -61,7 +70,8 @@ for path, page in pages.items():
         assert target.is_relative_to(root.resolve()) and target.is_file(), f'Link ou recurso ausente em {path}: {href}'
         if parsed.fragment and target.suffix == '.html':
             assert target.resolve() in pages and unquote(parsed.fragment) in pages[target.resolve()].ids, f'Âncora ausente: {href}'
-    assert {'contact-form','contact-interest','contact-error','contact-success-view','mobile-nav'} <= page.ids
+    assert {'contact-form','contact-interest','contact-error','contact-success-view','mobile-nav','menu-shade','contact-dialog-content','contact-actions','contact-submit','success-title'} <= page.ids
+    assert 'contact-form' in page.forms and page.submit_controls.get('contact-submit') == 'contact-form', f'O botão de envio precisa estar associado ao formulário de contato: {path}'
 
 namespace = {'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
 urls = {node.text for node in ET.parse(root/'sitemap.xml').findall('s:url/s:loc', namespace)}

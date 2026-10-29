@@ -12,11 +12,12 @@ Este repositório é a base oficial para o desenvolvimento do site. A primeira v
 - Quatro páginas próprias para os serviços, sitemap, metadados de busca e imagem de compartilhamento da marca.
 - Confirmação automática por e-mail após o aceite do contato comercial, com texto fixo e controle de envios repetidos.
 - Método de trabalho e perguntas frequentes.
-- Layout para computador e celular, menu móvel e navegação por teclado.
+- Layout para computador e celular, menu móvel com áreas de toque amplas, serviços compactos e navegação por teclado.
 - Contraste entre blocos claros e escuros, grafismos derivados do símbolo da marca e ilustrações conceituais próprias para cada serviço.
 - Movimento discreto nas entradas e trocas de serviço, com respeito à preferência por movimento reduzido. `dist/brand.css` reúne a direção visual sobre a base responsiva de `styles.css`.
 - Contato oficial em `comercial@moranaservicos.com.br`, com links diretos de e-mail.
 - Formulário com envio em PHP para a Locaweb; em hospedagem estática, prepara uma mensagem para revisão e envio no aplicativo de e-mail.
+- Contato com fechamento e envio fora da área rolável dos campos, adaptação à altura visual disponível e preservação do ponto de navegação ao fechar.
 
 Os serviços e o método apresentados mantêm o conteúdo inicial; sua revisão não é prioridade neste momento. A empresa atende diferentes portes e segmentos e não utiliza WhatsApp por enquanto. O site não usa banco de dados.
 
@@ -69,6 +70,8 @@ tests/            Testes sem envio real de e-mail
 | Logotipo | Arquivos originais da marca, preservando seu desenho e tipografia |
 
 Fotografia arquitetônica ilustrativa de Sean Pollock / Unsplash, identificador `photo-1486406146926-c627a92ad1ab`. A imagem não representa as instalações da empresa. Montserrat é distribuída sob a SIL Open Font License; a licença acompanha os arquivos em `dist/assets/Montserrat-LICENSE.txt`.
+
+Os pesos 300, 400, 500 e 600 da Montserrat são servidos em WOFF2, com redução de aproximadamente 66% no tamanho desses quatro arquivos em relação aos TTF originais. Os TTF e a licença foram preservados. A conversão usa fontTools com Brotli apenas no desenvolvimento; a hospedagem não precisa dessas ferramentas.
 
 ## Publicação
 

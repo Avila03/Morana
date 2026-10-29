@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#29383e">
   <meta name="description" content="Consultoria em gestão financeira: organização do fluxo de caixa, orçamento, análise de custos e margens e indicadores para apoiar decisões.">
   <meta property="og:title" content="Gestão financeira | Morana">
@@ -20,8 +20,8 @@
   <title>Gestão financeira | Morana</title>
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Service","name":"Gestão financeira","description":"Consultoria em gestão financeira: organização do fluxo de caixa, orçamento, análise de custos e margens e indicadores para apoiar decisões.","serviceType":"Gestão financeira","url":"https://moranaservicos.com.br/solucoes/gestao-financeira/","provider":{"@type":"Organization","@id":"https://moranaservicos.com.br/#organizacao","name":"Morana Serviços LTDA","url":"https://moranaservicos.com.br/"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Início","item":"https://moranaservicos.com.br/"},{"@type":"ListItem","position":2,"name":"Gestão financeira","item":"https://moranaservicos.com.br/solucoes/gestao-financeira/"}]}]}</script>
   <link rel="icon" type="image/png" href="../../assets/morana-simbolo.png">
-  <link rel="preload" href="../../assets/montserrat-400.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="preload" href="../../assets/montserrat-500.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="../../assets/montserrat-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../../assets/montserrat-500.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="../../styles.css">
   <link rel="stylesheet" href="../../brand.css">
   <script src="../../app.js" defer></script>
@@ -48,13 +48,17 @@
         <a href="../../#solucoes">Soluções</a>
         <a href="../../#metodo">Nosso método</a>
       </nav>
-      <button class="button header-cta" data-contact>Vamos conversar <svg class="icon"><use href="#arrow-up-right"/></svg></button>
+      <button class="button header-cta" data-contact><span class="header-cta-full">Vamos conversar</span><span class="header-cta-short">Conversar</span> <svg class="icon"><use href="#arrow-up-right"/></svg></button>
       <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span></button>
     </div>
     <nav id="mobile-nav" class="mobile-nav" aria-label="Navegação no celular" hidden>
-      <a href="../../#sobre">A Morana</a><a href="../../#solucoes">Soluções</a><a href="../../#metodo">Nosso método</a><a href="#contato">Contato</a>
+      <a href="../../#sobre"><span class="mobile-nav-number" aria-hidden="true">01</span><span>A Morana</span><svg class="icon small" aria-hidden="true"><use href="#arrow-up-right"/></svg></a>
+      <a href="../../#solucoes"><span class="mobile-nav-number" aria-hidden="true">02</span><span>Soluções</span><svg class="icon small" aria-hidden="true"><use href="#arrow-up-right"/></svg></a>
+      <a href="../../#metodo"><span class="mobile-nav-number" aria-hidden="true">03</span><span>Nosso método</span><svg class="icon small" aria-hidden="true"><use href="#arrow-up-right"/></svg></a>
+      <a href="#contato"><span class="mobile-nav-number" aria-hidden="true">04</span><span>Contato</span><svg class="icon small" aria-hidden="true"><use href="#arrow-up-right"/></svg></a>
     </nav>
   </header>
+  <div class="menu-shade" id="menu-shade" aria-hidden="true" hidden></div>
 
   <main id="conteudo">
     <div class="service-stage">
@@ -78,24 +82,26 @@
   </footer>
 
   <dialog class="contact-dialog" id="contact-dialog" aria-labelledby="dialog-title">
-    <button class="dialog-close" data-close-dialog aria-label="Fechar contato"><svg class="icon"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+    <div class="dialog-toolbar"><span aria-hidden="true">MORANA / CONTATO</span><button class="dialog-close" data-close-dialog aria-label="Fechar contato"><svg class="icon"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+    <div class="dialog-content" id="contact-dialog-content">
     <div id="contact-form-view"><p class="eyebrow">VAMOS CONVERSAR</p><h2 id="dialog-title">Conte seu desafio.</h2><p class="dialog-intro">Uma primeira conversa começa por entender sua empresa.</p><a class="dialog-email" href="mailto:comercial@moranaservicos.com.br">comercial@moranaservicos.com.br <svg class="icon small"><use href="#arrow-up-right"/></svg></a>
       <form id="contact-form" action="../../contato.php" method="post">
         <div class="form-row"><label>Seu nome<input name="nome" autocomplete="name" placeholder="Como podemos chamar você?" required maxlength="90"></label><label>Empresa<input name="empresa" autocomplete="organization" placeholder="Nome da sua empresa" required maxlength="120"></label></div>
-        <label>E-mail profissional<input name="email" autocomplete="email" type="email" placeholder="voce@empresa.com.br" required maxlength="180"></label>
+        <label>E-mail profissional<input name="email" autocomplete="email" type="email" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="voce@empresa.com.br" required maxlength="180"></label>
         <label>O que você gostaria de trabalhar?<select name="interesse" id="contact-interest"><option value="Ainda quero entender melhor">Ainda quero entender melhor</option><option>Planejamento estratégico</option><option>Gestão financeira</option><option>Processos e operação</option><option>Pessoas e liderança</option></select></label>
         <label>Conte um pouco do seu momento <span class="optional">(opcional)</span><textarea name="desafio" rows="3" placeholder="O que sua empresa vive hoje e o que você quer mudar?" maxlength="1200"></textarea></label>
         <div class="form-honeypot" aria-hidden="true"><label>Deixe este campo vazio<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
         <p class="contact-data-note">Usaremos seus dados para responder à solicitação e, no envio pelo site, encaminhar uma confirmação de recebimento.</p>
         <p id="contact-transport-note" class="contact-data-note">Você pode escrever diretamente para nosso e-mail ou continuar pelo formulário.</p>
         <p id="contact-error" class="contact-error" role="alert" tabindex="-1" hidden></p>
-        <button class="button form-submit" type="submit"><span id="contact-submit-label">Continuar</span> <svg class="icon"><use href="#arrow-up-right"/></svg></button>
       </form>
     </div>
-    <div id="contact-success-view" hidden><span class="success-icon"><svg class="icon"><use href="#check"/></svg></span><p class="eyebrow" id="contact-result-label">SUA SOLICITAÇÃO</p><h2 id="success-title">Tudo começa<br>com uma conversa.</h2><p id="success-message"></p><dl class="request-summary"><dt>Empresa</dt><dd id="summary-company"></dd><dt>Área de interesse</dt><dd id="summary-interest"></dd></dl><p class="contact-note" id="contact-result-note"></p><div id="contact-draft-actions" hidden><a class="button draft-email-button" id="contact-draft-link" href="mailto:comercial@moranaservicos.com.br">Abrir aplicativo de e-mail <svg class="icon"><use href="#arrow-up-right"/></svg></a><label class="draft-preview-label" for="contact-draft-text">Sua mensagem</label><textarea class="draft-preview" id="contact-draft-text" rows="6" readonly></textarea><button type="button" class="text-link" id="copy-contact-message">Copiar mensagem <svg class="icon small"><use href="#plus"/></svg></button><p id="contact-copy-status" class="contact-data-note" role="status"></p></div><button class="button" data-close-dialog>Voltar ao site <svg class="icon"><use href="#arrow-right"/></svg></button></div>
+    <div id="contact-success-view" hidden><span class="success-icon"><svg class="icon"><use href="#check"/></svg></span><p class="eyebrow" id="contact-result-label">SUA SOLICITAÇÃO</p><h2 id="success-title" tabindex="-1">Tudo começa<br>com uma conversa.</h2><p id="success-message"></p><dl class="request-summary"><dt>Empresa</dt><dd id="summary-company"></dd><dt>Área de interesse</dt><dd id="summary-interest"></dd></dl><p class="contact-note" id="contact-result-note"></p><div id="contact-draft-actions" hidden><a class="button draft-email-button" id="contact-draft-link" href="mailto:comercial@moranaservicos.com.br">Abrir aplicativo de e-mail <svg class="icon"><use href="#arrow-up-right"/></svg></a><label class="draft-preview-label" for="contact-draft-text">Sua mensagem</label><textarea class="draft-preview" id="contact-draft-text" rows="6" readonly></textarea><button type="button" class="text-link" id="copy-contact-message">Copiar mensagem <svg class="icon small"><use href="#plus"/></svg></button><p id="contact-copy-status" class="contact-data-note" role="status"></p></div><button class="button" data-close-dialog>Voltar ao site <svg class="icon"><use href="#arrow-right"/></svg></button></div>
+    </div>
+    <div class="contact-actions" id="contact-actions"><button class="button form-submit" id="contact-submit" type="submit" form="contact-form"><span id="contact-submit-label">Continuar</span> <svg class="icon"><use href="#arrow-up-right"/></svg></button></div>
   </dialog>
 
-  <dialog class="info-dialog" id="privacy-info" aria-labelledby="info-title"><button class="dialog-close" data-close-info aria-label="Fechar informações"><svg class="icon"><path d="m6 6 12 12M6 18 18 6"/></svg></button><p class="eyebrow">MORANA / CONTATO</p><h2 id="info-title">Seu contato<br>com a Morana.</h2><p>O canal comercial da Morana é <a href="mailto:comercial@moranaservicos.com.br">comercial@moranaservicos.com.br</a>. Usamos seu nome, empresa, e-mail e mensagem para responder à sua solicitação.</p><p>No envio pelo site, a solicitação é encaminhada ao e-mail comercial e uma confirmação automática pode ser enviada ao endereço informado. Essa confirmação não inclui o texto da sua mensagem. Contadores temporários, com identificadores protegidos por hash, limitam envios repetidos. O site não cria uma conta para você nem grava sua mensagem em um banco de dados.</p><p>Ao preparar um e-mail no seu aplicativo, você poderá revisar a mensagem e decidir quando enviá-la. Para dúvidas sobre os dados informados, escreva ao nosso e-mail comercial.</p><button class="button" data-close-info>Voltar ao site <svg class="icon"><use href="#arrow-right"/></svg></button></dialog>
+  <dialog class="info-dialog" id="privacy-info" aria-labelledby="info-title"><div class="dialog-toolbar"><span aria-hidden="true">MORANA / PRIVACIDADE</span><button class="dialog-close" data-close-info aria-label="Fechar informações"><svg class="icon"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div><div class="dialog-content"><p class="eyebrow">MORANA / CONTATO</p><h2 id="info-title">Seu contato<br>com a Morana.</h2><p>O canal comercial da Morana é <a href="mailto:comercial@moranaservicos.com.br">comercial@moranaservicos.com.br</a>. Usamos seu nome, empresa, e-mail e mensagem para responder à sua solicitação.</p><p>No envio pelo site, a solicitação é encaminhada ao e-mail comercial e uma confirmação automática pode ser enviada ao endereço informado. Essa confirmação não inclui o texto da sua mensagem. Contadores temporários, com identificadores protegidos por hash, limitam envios repetidos. O site não cria uma conta para você nem grava sua mensagem em um banco de dados.</p><p>Ao preparar um e-mail no seu aplicativo, você poderá revisar a mensagem e decidir quando enviá-la. Para dúvidas sobre os dados informados, escreva ao nosso e-mail comercial.</p><button class="button" data-close-info>Voltar ao site <svg class="icon"><use href="#arrow-right"/></svg></button></div></dialog>
   <noscript><p class="noscript-contact">Para falar com a Morana, escreva para <a href="mailto:comercial@moranaservicos.com.br">comercial@moranaservicos.com.br</a>.</p></noscript>
 </body>
 </html>

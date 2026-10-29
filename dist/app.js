@@ -1,6 +1,23 @@
 'use strict';
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const compactLayout = window.matchMedia('(max-width:760px), (max-width:1000px) and (max-height:520px)');
+let overlayScrollY = 0;
+function lockPageScroll() {
+  if (document.body.classList.contains('modal-open')) return;
+  overlayScrollY = window.scrollY;
+  document.body.style.setProperty('--locked-scroll',String(-overlayScrollY)+'px');
+  document.body.classList.add('modal-open');
+}
+function releasePageScroll() {
+  if (!document.body.classList.contains('modal-open') || !mobileNav.hidden || document.querySelector('dialog[open]')) return;
+  document.body.classList.remove('modal-open');
+  document.body.style.removeProperty('--locked-scroll');
+  const previousBehavior = document.documentElement.style.scrollBehavior;
+  document.documentElement.style.scrollBehavior = 'auto';
+  window.scrollTo(0,overlayScrollY);
+  document.documentElement.style.scrollBehavior = previousBehavior;
+}
 const services = {
   estrategia: {tag:'ESTRATÉGIA',icon:'target',title:'Saber onde chegar muda a forma de caminhar.',description:'Transforme objetivos em prioridades claras. Um olhar para o momento atual do negócio e um plano que conecta visão de futuro às decisões de hoje.',deliverables:['Diagnóstico do negócio e das oportunidades','Definição de objetivos e indicadores','Plano de ação com prioridades e responsáveis'],interest:'Planejamento estratégico',index:'01'},
   financeiro: {tag:'FINANÇAS',icon:'chart',title:'Entenda os números. Decida com mais segurança.',description:'Traga visibilidade para a saúde financeira da empresa. Organize as informações, compreenda custos e margens e tenha uma base mais clara para decidir.',deliverables:['Organização do fluxo de caixa e do orçamento','Análise de custos, despesas e margens','Indicadores para acompanhar a gestão financeira'],interest:'Gestão financeira',index:'02'},
@@ -40,8 +57,11 @@ function selectService(key, moveFocus = false) {
   document.getElementById('service-details').href = 'solucoes/' + servicePaths[key] + '/';
   const panel = document.getElementById('painel-solucao');
   panel.setAttribute('aria-labelledby','tab-' + key);
-  if (panel.dataset.visual !== key && !reducedMotion.matches && typeof panel.animate === 'function') {
-    panel.animate([{opacity:.65,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'ease-out'});
+  const transitionTarget = compactLayout.matches ? panel.querySelector('.service-panel-heading') : panel;
+  for (const animation of transitionTarget.getAnimations?.() ?? []) animation.cancel();
+  if (panel.dataset.visual !== key && !reducedMotion.matches && typeof transitionTarget.animate === 'function') {
+    const frames = compactLayout.matches ? [{opacity:.5},{opacity:1}] : [{opacity:.65,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}];
+    transitionTarget.animate(frames,{duration:compactLayout.matches?180:240,easing:'ease-out'});
   }
   panel.dataset.visual = key;
 }
@@ -75,16 +95,31 @@ document.querySelectorAll('[data-challenge]').forEach(button => button.addEventL
 
 const menuButton = document.querySelector('.menu-toggle');
 const mobileNav = document.getElementById('mobile-nav');
-function closeMenu() {mobileNav.hidden = true;menuButton.setAttribute('aria-expanded','false');menuButton.setAttribute('aria-label','Abrir menu');}
+const menuShade = document.getElementById('menu-shade');
+function closeMenu(restoreFocus = false) {
+  const wasOpen = !mobileNav.hidden;
+  mobileNav.hidden = true;
+  menuShade.hidden = true;
+  document.body.classList.remove('menu-open');
+  menuButton.setAttribute('aria-expanded','false');
+  menuButton.setAttribute('aria-label','Abrir menu');
+  releasePageScroll();
+  if (restoreFocus && wasOpen) menuButton.focus({preventScroll:true});
+}
 menuButton.addEventListener('click', () => {
   const opened = menuButton.getAttribute('aria-expanded') === 'true';
-  menuButton.setAttribute('aria-expanded',String(!opened));
-  menuButton.setAttribute('aria-label',opened ? 'Abrir menu' : 'Fechar menu');
-  mobileNav.hidden = opened;
+  if (opened) {closeMenu(true);return;}
+  lockPageScroll();
+  document.body.classList.add('menu-open');
+  mobileNav.hidden = false;
+  menuShade.hidden = false;
+  menuButton.setAttribute('aria-expanded','true');
+  menuButton.setAttribute('aria-label','Fechar menu');
 });
-mobileNav.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
-document.addEventListener('keydown',event => {if(event.key==='Escape')closeMenu();});
-window.matchMedia('(min-width:761px)').addEventListener('change',event => {if(event.matches)closeMenu();});
+mobileNav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => closeMenu()));
+menuShade.addEventListener('click', () => closeMenu(true));
+document.addEventListener('keydown',event => {if(event.key==='Escape')closeMenu(true);});
+compactLayout.addEventListener('change',event => {if(!event.matches)closeMenu();});
 
 const contactDialog = document.getElementById('contact-dialog');
 const contactForm = document.getElementById('contact-form');
@@ -98,7 +133,9 @@ const infoDialog = document.getElementById('privacy-info');
 const formView = document.getElementById('contact-form-view');
 const successView = document.getElementById('contact-success-view');
 const commercialEmail = 'comercial@moranaservicos.com.br';
-const submitButton = contactForm.querySelector('[type="submit"]');
+const submitButton = document.getElementById('contact-submit');
+const contactActions = document.getElementById('contact-actions');
+const contactContent = document.getElementById('contact-dialog-content');
 const submitLabel = document.getElementById('contact-submit-label');
 const transportNote = document.getElementById('contact-transport-note');
 const formError = document.getElementById('contact-error');
@@ -106,6 +143,20 @@ let requestSerial = 0;
 let requestController = null;
 let sending = false;
 let serverAvailable = false;
+
+function syncDialogViewport() {
+  const viewport = window.visualViewport;
+  const height = viewport?.height > 0 ? viewport.height : window.innerHeight;
+  const top = viewport?.offsetTop || 0;
+  for (const dialog of [contactDialog,infoDialog]) {
+    dialog.style.setProperty('--dialog-height',height+'px');
+    dialog.style.setProperty('--dialog-top',top+'px');
+  }
+}
+window.visualViewport?.addEventListener('resize',syncDialogViewport);
+window.visualViewport?.addEventListener('scroll',syncDialogViewport);
+window.addEventListener('resize',syncDialogViewport,{passive:true});
+syncDialogViewport();
 
 async function discoverContactServer() {
   const host = window.location.hostname;
@@ -149,31 +200,35 @@ function showContactResult(fields, sent, receiptSent = false) {
   document.getElementById('contact-draft-link').href = `mailto:${commercialEmail}?subject=${encodeURIComponent('Contato pelo site | Morana')}&body=${encodeURIComponent(body)}`;
   formView.hidden = true;
   successView.hidden = false;
+  contactActions.hidden = true;
   contactDialog.setAttribute('aria-labelledby','success-title');
-  contactDialog.scrollTop = 0;
-  const focusTarget = sent ? successView.querySelector('[data-close-dialog]') : document.getElementById('contact-draft-link');
-  focusTarget.focus();
+  contactContent.scrollTop = 0;
+  const focusTarget = document.getElementById('success-title');
+  focusTarget.focus({preventScroll:true});
   contactForm.reset();
 }
 document.querySelectorAll('[data-contact]').forEach(button => button.addEventListener('click', () => {
   closeMenu();
   formView.hidden = false;
   successView.hidden = true;
+  contactActions.hidden = false;
   contactDialog.setAttribute('aria-labelledby','dialog-title');
   contactForm.reset();
   formError.hidden = true;
   formError.textContent = '';
   updateContactTransport();
   document.getElementById('contact-interest').value = button.dataset.interest || document.body.dataset.interest || 'Ainda quero entender melhor';
-  document.body.classList.add('modal-open');
+  lockPageScroll();
+  syncDialogViewport();
   contactDialog.showModal();
+  contactContent.scrollTop = 0;
 }));
 document.querySelectorAll('[data-close-dialog]').forEach(button => button.addEventListener('click', () => contactDialog.close()));
-document.getElementById('privacy-info-button').addEventListener('click',() => {document.body.classList.add('modal-open');infoDialog.showModal();});
+document.getElementById('privacy-info-button').addEventListener('click',() => {lockPageScroll();syncDialogViewport();infoDialog.showModal();infoDialog.querySelector('.dialog-content').scrollTop=0;});
 document.querySelectorAll('[data-close-info]').forEach(button => button.addEventListener('click',() => infoDialog.close()));
 for(const dialog of [contactDialog,infoDialog]) {
   dialog.addEventListener('close',() => {
-    document.body.classList.remove('modal-open');
+    releasePageScroll();
     if(dialog===contactDialog){
       requestSerial++;
       if(requestController)requestController.abort();
@@ -268,7 +323,9 @@ reducedMotion.addEventListener('change', event => {
   if (event.matches) {
     revealObserver?.disconnect();
     revealTargets.forEach(element => element.classList.add('is-revealed'));
-    for (const animation of document.getElementById('painel-solucao')?.getAnimations?.() ?? []) animation.cancel();
+    for (const target of document.querySelectorAll('#painel-solucao,.service-panel-heading')) {
+      for (const animation of target.getAnimations?.() ?? []) animation.cancel();
+    }
   }
 });
 
@@ -293,6 +350,7 @@ function queueReadingProgress() {
   if (progressQueued) return;
   progressQueued = true;
   window.requestAnimationFrame(() => {
+    if (document.body.classList.contains('modal-open')) {progressQueued=false;return;}
     const maximum = document.documentElement.scrollHeight - window.innerHeight;
     const progress = maximum > 0 ? Math.min(1,Math.max(0,window.scrollY / maximum)) : 0;
     siteHeader.style.setProperty('--reading-progress',String(progress));
