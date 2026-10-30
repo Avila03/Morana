@@ -7,13 +7,13 @@ Este repositório é a base oficial para o desenvolvimento do site. A primeira v
 ## O que está incluído
 
 - Apresentação institucional da Morana.
-- Soluções de gestão com seleção interativa: estratégia, finanças, processos e pessoas.
+- Soluções de gestão em lista expansível: estratégia, finanças, processos e pessoas, com contato específico e página de detalhes para cada área.
 - Seleção do desafio com indicação da solução e interesse já preenchido no contato.
 - Quatro páginas próprias para os serviços, sitemap, metadados de busca e imagem de compartilhamento da marca.
 - Confirmação automática por e-mail após o aceite do contato comercial, com texto fixo e controle de envios repetidos.
 - Método de trabalho e perguntas frequentes.
 - Layout para computador e celular, menu móvel com áreas de toque amplas, serviços compactos e navegação por teclado.
-- Contraste entre blocos claros e escuros, grafismos derivados do símbolo da marca e ilustrações conceituais próprias para cada serviço.
+- Abertura editorial clara combinada com blocos em grafite, grafismos derivados do símbolo da marca e ilustrações conceituais próprias para cada serviço.
 - Movimento discreto nas entradas e trocas de serviço, com respeito à preferência por movimento reduzido. `dist/brand.css` reúne a direção visual sobre a base responsiva de `styles.css`.
 - Contato oficial em `comercial@moranaservicos.com.br`, com links diretos de e-mail.
 - Formulário com envio em PHP para a Locaweb; em hospedagem estática, prepara uma mensagem para revisão e envio no aplicativo de e-mail.
@@ -41,7 +41,7 @@ Nesse servidor estático, o formulário prepara um e-mail, sem informar que ele 
 dist/
   index.html       Conteúdo e estrutura das páginas
   styles.css       Identidade visual e layout responsivo
-  app.js           Abas de serviços, menu e fluxo de contato
+  app.js           Serviços expansíveis, menu e fluxo de contato
   contato.php      Endpoint de disponibilidade e encaminhamento de contato
   contact-handler.php  Validação, proteção contra abuso e montagem da mensagem
   contact-mailer.php   SMTP, configuração privada e validação da ativação

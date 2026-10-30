@@ -3,6 +3,12 @@
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const compactLayout = window.matchMedia('(max-width:760px), (max-width:1000px) and (max-height:520px)');
 let overlayScrollY = 0;
+function setPageScroll(top) {
+  const previousBehavior = document.documentElement.style.scrollBehavior;
+  document.documentElement.style.scrollBehavior = 'auto';
+  window.scrollTo(0,top);
+  document.documentElement.style.scrollBehavior = previousBehavior;
+}
 function lockPageScroll() {
   if (document.body.classList.contains('modal-open')) return;
   overlayScrollY = window.scrollY;
@@ -13,65 +19,31 @@ function releasePageScroll() {
   if (!document.body.classList.contains('modal-open') || !mobileNav.hidden || document.querySelector('dialog[open]')) return;
   document.body.classList.remove('modal-open');
   document.body.style.removeProperty('--locked-scroll');
-  const previousBehavior = document.documentElement.style.scrollBehavior;
-  document.documentElement.style.scrollBehavior = 'auto';
-  window.scrollTo(0,overlayScrollY);
-  document.documentElement.style.scrollBehavior = previousBehavior;
+  setPageScroll(overlayScrollY);
 }
 const services = {
-  estrategia: {tag:'ESTRATÉGIA',icon:'target',title:'Saber onde chegar muda a forma de caminhar.',description:'Transforme objetivos em prioridades claras. Um olhar para o momento atual do negócio e um plano que conecta visão de futuro às decisões de hoje.',deliverables:['Diagnóstico do negócio e das oportunidades','Definição de objetivos e indicadores','Plano de ação com prioridades e responsáveis'],interest:'Planejamento estratégico',index:'01'},
-  financeiro: {tag:'FINANÇAS',icon:'chart',title:'Entenda os números. Decida com mais segurança.',description:'Traga visibilidade para a saúde financeira da empresa. Organize as informações, compreenda custos e margens e tenha uma base mais clara para decidir.',deliverables:['Organização do fluxo de caixa e do orçamento','Análise de custos, despesas e margens','Indicadores para acompanhar a gestão financeira'],interest:'Gestão financeira',index:'02'},
-  processos: {tag:'OPERAÇÃO',icon:'process',title:'Uma operação mais simples. Um negócio mais preparado.',description:'Olhe para a rotina com perspectiva. Identifique gargalos, reduza o retrabalho e desenhe processos que façam sentido para quem executa e para o negócio.',deliverables:['Mapeamento de processos e gargalos','Definição de rotinas e responsabilidades','Acompanhamento da melhoria operacional'],interest:'Processos e operação',index:'03'},
-  pessoas: {tag:'PESSOAS',icon:'people',title:'Pessoas alinhadas movem a empresa na mesma direção.',description:'Aproxime os objetivos da empresa do dia a dia da equipe. Desenvolva uma estrutura mais clara para a liderança, a comunicação e a responsabilidade de cada pessoa.',deliverables:['Clareza de papéis e responsabilidades','Alinhamento da equipe aos objetivos do negócio','Rotinas de liderança e acompanhamento'],interest:'Pessoas e liderança',index:'04'}
+  estrategia: {interest:'Planejamento estratégico'},
+  financeiro: {interest:'Gestão financeira'},
+  processos: {interest:'Processos e operação'},
+  pessoas: {interest:'Pessoas e liderança'}
 };
-const tabs = [...document.querySelectorAll('[data-service]')];
 const servicePaths = {estrategia:'planejamento-estrategico',financeiro:'gestao-financeira',processos:'processos-e-operacao',pessoas:'pessoas-e-lideranca'};
-function selectService(key, moveFocus = false) {
-  const item = services[key];
-  if (!item) return;
-  tabs.forEach(tab => {
-    const selected = tab.dataset.service === key;
-    tab.classList.toggle('active', selected);
-    tab.setAttribute('aria-selected', String(selected));
-    tab.tabIndex = selected ? 0 : -1;
-    if (selected && moveFocus) tab.focus();
-  });
-  document.getElementById('service-title').textContent = item.title;
-  document.getElementById('service-description').textContent = item.description;
-  document.getElementById('service-tag').textContent = item.tag;
-  document.getElementById('service-icon-use').setAttribute('href', '#' + item.icon);
-  document.getElementById('service-index').textContent = item.index;
-  document.getElementById('service-art-image').src = 'assets/servico-' + key + '.svg';
-  const list = document.getElementById('service-deliverables');
-  list.replaceChildren(...item.deliverables.map(text => {
-    const li = document.createElement('li');
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.classList.add('icon');
-    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-    use.setAttribute('href', '#check');
-    svg.append(use);
-    li.append(svg, document.createTextNode(text));
-    return li;
-  }));
-  document.getElementById('service-contact').dataset.interest = item.interest;
-  document.getElementById('service-details').href = 'solucoes/' + servicePaths[key] + '/';
-  const panel = document.getElementById('painel-solucao');
-  panel.setAttribute('aria-labelledby','tab-' + key);
-  const transitionTarget = compactLayout.matches ? panel.querySelector('.service-panel-heading') : panel;
-  for (const animation of transitionTarget.getAnimations?.() ?? []) animation.cancel();
-  if (panel.dataset.visual !== key && !reducedMotion.matches && typeof transitionTarget.animate === 'function') {
-    const frames = compactLayout.matches ? [{opacity:.5},{opacity:1}] : [{opacity:.65,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}];
-    transitionTarget.animate(frames,{duration:compactLayout.matches?180:240,easing:'ease-out'});
-  }
-  panel.dataset.visual = key;
+const servicePanels = [...document.querySelectorAll('[data-service-panel]')];
+function selectService(key) {
+  const selected = servicePanels.find(panel => panel.dataset.servicePanel === key);
+  if (!selected) return;
+  servicePanels.forEach(panel => {panel.open = panel === selected;});
 }
-tabs.forEach((tab, index) => {
-  tab.addEventListener('click', () => selectService(tab.dataset.service));
-  tab.addEventListener('keydown', event => {
-    const next = {ArrowDown:(index+1)%tabs.length,ArrowRight:(index+1)%tabs.length,ArrowUp:(index+tabs.length-1)%tabs.length,ArrowLeft:(index+tabs.length-1)%tabs.length,Home:0,End:tabs.length-1}[event.key];
-    if (next !== undefined) {event.preventDefault();selectService(tabs[next].dataset.service,true);}
+servicePanels.forEach(panel => panel.addEventListener('toggle', () => {
+  if (!panel.open) return;
+  servicePanels.forEach(other => {if (other !== panel) other.open = false;});
+  window.requestAnimationFrame(() => {
+    if (!panel.open || document.body.classList.contains('modal-open')) return;
+    const top = panel.getBoundingClientRect().top;
+    const headerBottom = document.querySelector('.site-header').getBoundingClientRect().bottom;
+    if (top < headerBottom + 16) setPageScroll(window.scrollY + top - headerBottom - 16);
   });
-});
+}));
 document.querySelectorAll('[data-select-service]').forEach(link => link.addEventListener('click', () => selectService(link.dataset.selectService)));
 
 const challenges = {
@@ -323,7 +295,7 @@ reducedMotion.addEventListener('change', event => {
   if (event.matches) {
     revealObserver?.disconnect();
     revealTargets.forEach(element => element.classList.add('is-revealed'));
-    for (const target of document.querySelectorAll('#painel-solucao,.service-panel-heading')) {
+    for (const target of document.querySelectorAll('.service-content')) {
       for (const animation of target.getAnimations?.() ?? []) animation.cancel();
     }
   }
