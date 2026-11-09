@@ -1,2 +1,9 @@
 # A página institucional da Morana é a entrada principal do domínio.
 DirectoryIndex index.html index.php
+
+# O HTML deve verificar atualizações; CSS e JS usam versões derivadas do conteúdo.
+<IfModule mod_headers.c>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>

@@ -38,6 +38,7 @@ jobs:
           php -n tests/contact-mailer-test.php
           python3 tests/contact-endpoint-test.py
           python3 scripts/build_service_pages.py --check
+          python3 tests/asset-version-test.py
           python3 tests/site-test.py
           python3 -m py_compile scripts/check_locaweb_deploy.py
           python3 scripts/package_locaweb.py

@@ -1,6 +1,7 @@
 """Atualiza as páginas estáticas de serviços com cabeçalho, contato e rodapé da página inicial."""
 from pathlib import Path
 import argparse
+import hashlib
 import html
 import json
 import re
@@ -84,9 +85,21 @@ def render(service, home):
     return page
 
 
+def version_assets(home):
+    """Cada alteração de CSS/JS recebe uma URL nova, mesmo com cache longo na hospedagem."""
+    for name in ['styles.css', 'brand.css', 'app.js']:
+        revision = hashlib.sha256((DIST/name).read_bytes()).hexdigest()[:16]
+        pattern = r'((?:src|href)=")' + re.escape(name) + r'(?:\?[^\"]*)?(\")'
+        home, count = re.subn(pattern, lambda match: match[1]+name+'?v='+revision+match[2], home)
+        if count != 1:
+            raise ValueError('Referência única ao recurso não encontrada: '+name)
+    return home
+
+
 def outputs():
-    home = (DIST/'index.html').read_text()
-    result = {DIST/'solucoes'/s['slug']/'index.html': render(s, home) for s in SERVICES}
+    home = version_assets((DIST/'index.html').read_text())
+    result = {DIST/'index.html': home}
+    result.update({DIST/'solucoes'/s['slug']/'index.html': render(s, home) for s in SERVICES})
     urls = [BASE] + [BASE+'solucoes/'+s['slug']+'/' for s in SERVICES]
     result[DIST/'sitemap.xml'] = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+''.join('  <url><loc>'+u+'</loc></url>\n' for u in urls)+'</urlset>\n'
     result[DIST/'robots.txt'] = 'User-agent: *\nAllow: /\n\nSitemap: '+BASE+'sitemap.xml\n'
@@ -104,4 +117,4 @@ if __name__ == '__main__':
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content)
-    print('4 páginas de serviços, sitemap e robots verificados.' if args.check else '4 páginas de serviços, sitemap e robots atualizados.')
+    print('5 páginas, versões dos recursos, sitemap e robots verificados.' if args.check else '5 páginas, versões dos recursos, sitemap e robots atualizados.')

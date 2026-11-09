@@ -102,12 +102,13 @@ A demonstração existente está em [morana-consultoria-demo.pastellion131.chatg
 
 ## Verificação
 
-As páginas publicadas continuam estáticas, sem instalação de dependências na Locaweb. Ao alterar o cabeçalho, o formulário ou o rodapé de `dist/index.html`, execute `python3 scripts/build_service_pages.py` para atualizar as páginas de serviços. O texto específico de cada serviço está nesse gerador. A imagem social tem fonte vetorial em `dist/assets/morana-compartilhamento.svg` e versão PNG para compartilhamento.
+As páginas publicadas continuam estáticas, sem instalação de dependências na Locaweb. Ao alterar o cabeçalho, o formulário, o rodapé, `styles.css`, `brand.css` ou `app.js`, execute `python3 scripts/build_service_pages.py`. Ele atualiza as páginas de serviços e as versões de CSS e JavaScript a partir do conteúdo dos arquivos, evitando estilos antigos em cache. O HTML revalida atualizações pela configuração em `.htaccess`. O texto específico de cada serviço está nesse gerador. A imagem social tem fonte vetorial em `dist/assets/morana-compartilhamento.svg` e versão PNG para compartilhamento.
 
 ```bash
 node --check dist/app.js
 node --test tests/contact-frontend-test.cjs
 python3 scripts/build_service_pages.py --check
+python3 tests/asset-version-test.py
 python3 tests/site-test.py
 php -l dist/contato.php
 php -l dist/contact-handler.php

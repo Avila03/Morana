@@ -7,6 +7,7 @@
 - Continue a partir do estado atual desse repositório. Não recrie uma demo separada nem use outro projeto como fonte de código.
 - Os arquivos em `dist/` são o código-fonte do site estático; não há etapa de build.
 - As quatro páginas em `dist/solucoes/`, o sitemap e o robots são atualizados por `python3 scripts/build_service_pages.py`, reutilizando o cabeçalho, contato e rodapé de `dist/index.html`. Após editar esses trechos compartilhados, regenere as páginas e confira `--check`; nenhum gerador roda na hospedagem.
+- O mesmo gerador atualiza as URLs de `styles.css`, `brand.css` e `app.js` com um identificador do conteúdo nas cinco páginas. Execute-o também após editar qualquer um desses recursos. Preserve a revalidação do HTML em `.htaccess`, para não misturar arquivos novos com estilos antigos em cache.
 
 ## Identidade e conteúdo
 
@@ -31,7 +32,7 @@
 ## Verificação
 
 - Para alterações no JavaScript, execute `node --check dist/app.js` e `node --test tests/contact-frontend-test.cjs`. Os testes do contato usam DOM e transporte simulados, sem envio real de e-mails.
-- Para páginas e navegação, execute `python3 scripts/build_service_pages.py --check` e `python3 tests/site-test.py`.
+- Para páginas e navegação, execute `python3 scripts/build_service_pages.py --check`, `python3 tests/asset-version-test.py` e `python3 tests/site-test.py`.
 - Para alterações no envio, confira a sintaxe de `dist/*.php` e `dist/vendor/phpmailer/*.php`, execute `php tests/contact-handler-test.php`, `php tests/contact-mailer-test.php` e `python3 tests/contact-endpoint-test.py`. Os testes usam transporte falso e não enviam mensagens reais.
 - Confira os caminhos de imagens, fontes e links internos depois de mover arquivos.
 - Para alterações visuais, revise computador e celular e teste as interações afetadas, usando o fluxo de preview disponível no ambiente.
