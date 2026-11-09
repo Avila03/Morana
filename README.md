@@ -17,6 +17,7 @@ Este repositório é a base oficial para o desenvolvimento do site. A primeira v
 - Movimento discreto nas entradas e trocas de serviço, com respeito à preferência por movimento reduzido. `dist/brand.css` reúne a direção visual sobre a base responsiva de `styles.css`.
 - Contato oficial em `comercial@moranaservicos.com.br`, com links diretos de e-mail.
 - Formulário com envio em PHP para a Locaweb; em hospedagem estática, prepara uma mensagem para revisão e envio no aplicativo de e-mail.
+- No domínio oficial, o envio ocorre pelo próprio site. Uma consulta de disponibilidade lenta não muda o fluxo para um aplicativo de e-mail; uma falha no envio mantém o texto para correção ou nova tentativa.
 - Contato com fechamento e envio fora da área rolável dos campos, adaptação à altura visual disponível e preservação do ponto de navegação ao fechar.
 
 Os serviços e o método apresentados mantêm o conteúdo inicial; sua revisão não é prioridade neste momento. A empresa atende diferentes portes e segmentos e não utiliza WhatsApp por enquanto. O site não usa banco de dados.
@@ -105,6 +106,7 @@ As páginas publicadas continuam estáticas, sem instalação de dependências n
 
 ```bash
 node --check dist/app.js
+node --test tests/contact-frontend-test.cjs
 python3 scripts/build_service_pages.py --check
 python3 tests/site-test.py
 php -l dist/contato.php

@@ -32,6 +32,7 @@ jobs:
       - name: Verificar JavaScript, PHP e pacote de publicação
         run: |
           node --check dist/app.js
+          node --test tests/contact-frontend-test.cjs
           for file in dist/*.php dist/vendor/phpmailer/*.php; do php -n -l "$file"; done
           php -n tests/contact-handler-test.php
           php -n tests/contact-mailer-test.php

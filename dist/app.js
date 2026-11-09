@@ -105,6 +105,7 @@ const infoDialog = document.getElementById('privacy-info');
 const formView = document.getElementById('contact-form-view');
 const successView = document.getElementById('contact-success-view');
 const commercialEmail = 'comercial@moranaservicos.com.br';
+const directContactHost = ['moranaservicos.com.br','www.moranaservicos.com.br'].includes(window.location.hostname.toLowerCase());
 const submitButton = document.getElementById('contact-submit');
 const contactActions = document.getElementById('contact-actions');
 const contactContent = document.getElementById('contact-dialog-content');
@@ -114,7 +115,7 @@ const formError = document.getElementById('contact-error');
 let requestSerial = 0;
 let requestController = null;
 let sending = false;
-let serverAvailable = false;
+let serverAvailable = directContactHost;
 
 function syncDialogViewport() {
   const viewport = window.visualViewport;
@@ -131,6 +132,8 @@ window.addEventListener('resize',syncDialogViewport,{passive:true});
 syncDialogViewport();
 
 async function discoverContactServer() {
+  // Na hospedagem oficial, o POST confirma o resultado. Uma consulta lenta não ativa mailto.
+  if (directContactHost) return true;
   const host = window.location.hostname;
   if (window.location.protocol === 'file:' || host.endsWith('.github.io') || host.endsWith('.chatgpt.site')) return false;
   const controller = new AbortController();
